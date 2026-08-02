@@ -27,6 +27,12 @@ export default function Home() {
             ),
           )}
         </div>
+        <a
+          className="inline-flex h-11 w-fit items-center rounded-md bg-cyan-300 px-4 text-sm font-semibold text-neutral-950 transition hover:bg-cyan-200"
+          href="/apply"
+        >
+          Start application
+        </a>
       </section>
     </main>
   );
