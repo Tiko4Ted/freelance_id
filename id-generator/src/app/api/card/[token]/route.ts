@@ -38,6 +38,10 @@ export async function POST(
     return new Response("This card download link is invalid.", { status: 404 });
   }
 
+  if (result.status === "ok_url") {
+    return Response.redirect(result.url, 303);
+  }
+
   return new Response(Readable.toWeb(result.stream) as ReadableStream, {
     headers: {
       "Cache-Control": "no-store",

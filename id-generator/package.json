@@ -21,6 +21,7 @@
     "@auth/prisma-adapter": "^2.11.3",
     "@prisma/adapter-pg": "^7.9.1",
     "@prisma/client": "^7.9.1",
+    "@vercel/blob": "^2.6.1",
     "encoding": "^0.1.13",
     "face-api.js": "^0.22.2",
     "next": "14.2.35",

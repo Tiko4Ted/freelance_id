@@ -73,6 +73,26 @@ describe("/api/card/[token]", () => {
     await expect(response.arrayBuffer()).resolves.toHaveProperty("byteLength", 7);
   });
 
+  it("redirects to a short-lived storage URL only after a matching DOB", async () => {
+    testState.audit = new FakeAuditService();
+    testState.service = new CardDownloadService(
+      new FakeCardDownloadRepository(),
+      new FakeSignedUrlStorageService(),
+      testState.audit as unknown as AuditService,
+      new InMemoryCardRateLimiter(),
+    );
+    const { POST } = await import("@/app/api/card/[token]/route");
+
+    const response = await POST(correctDobRequest(), {
+      params: { token: "test-token" },
+    });
+
+    expect(response.status).toBe(303);
+    expect(response.headers.get("location")).toBe(
+      "https://blob.example.test/signed-card-url",
+    );
+  });
+
   it("returns an explicit expired-link state", async () => {
     testState.audit = new FakeAuditService();
     testState.service = new CardDownloadService(
@@ -149,6 +169,17 @@ class FakeStorageService implements StorageService {
 
   async exists(): Promise<boolean> {
     return true;
+  }
+}
+
+class FakeSignedUrlStorageService extends FakeStorageService {
+  async createSignedReadUrl(
+    key: string,
+    expiresInSeconds: number,
+  ): Promise<string> {
+    expect(key).toBe("cards/application-1/card.png");
+    expect(expiresInSeconds).toBe(300);
+    return "https://blob.example.test/signed-card-url";
   }
 }
 

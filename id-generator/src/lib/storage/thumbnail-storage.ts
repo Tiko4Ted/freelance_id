@@ -2,6 +2,7 @@ import {
   LocalFilesystemStorageService,
   type StorageService,
 } from "@/lib/storage/local-filesystem-storage";
+import { createStorageService } from "@/lib/storage/storage-factory";
 
 export type StoredThumbnail = {
   key: string;
@@ -53,6 +54,10 @@ export function createLocalFilesystemThumbnailStorage(input: {
       rootPath: input.rootPath,
     }),
   );
+}
+
+export function createThumbnailStorageService(): ThumbnailStorage {
+  return new LocalFilesystemThumbnailStorage(createStorageService());
 }
 
 function decodeDataUrl(dataUrl: string): Buffer {

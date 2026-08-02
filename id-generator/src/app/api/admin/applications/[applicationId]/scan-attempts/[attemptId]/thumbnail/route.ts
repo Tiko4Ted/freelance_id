@@ -6,7 +6,7 @@ import { createAuditService } from "@/lib/application-container";
 import { requestContextFromHeaders } from "@/lib/audit/request-context";
 import { findThumbnailForPreview } from "@/lib/admin/dashboard-queries";
 import { authorizeAdminSession } from "@/lib/auth/admin-session-state";
-import { LocalFilesystemStorageService } from "@/lib/storage/local-filesystem-storage";
+import { createStorageService } from "@/lib/storage/storage-factory";
 
 export async function GET(
   request: Request,
@@ -30,13 +30,6 @@ export async function GET(
     return NextResponse.json({ error: "Not found." }, { status: 404 });
   }
 
-  if (!process.env.STORAGE_ROOT_PATH) {
-    return NextResponse.json(
-      { error: "Storage is not configured." },
-      { status: 500 },
-    );
-  }
-
   const thumbnail = await findThumbnailForPreview({
     applicationId: params.applicationId,
     attemptId: params.attemptId,
@@ -46,9 +39,7 @@ export async function GET(
     return NextResponse.json({ error: "Not found." }, { status: 404 });
   }
 
-  const storage = new LocalFilesystemStorageService({
-    rootPath: process.env.STORAGE_ROOT_PATH,
-  });
+  const storage = createStorageService();
 
   if (!(await storage.exists(thumbnail.thumbnailKey))) {
     return NextResponse.json({ error: "Not found." }, { status: 404 });
@@ -65,6 +56,13 @@ export async function GET(
     },
     context,
   });
+
+  if (storage.createSignedReadUrl) {
+    return NextResponse.redirect(
+      await storage.createSignedReadUrl(thumbnail.thumbnailKey, 300),
+      303,
+    );
+  }
 
   const stream = await storage.get(thumbnail.thumbnailKey);
 

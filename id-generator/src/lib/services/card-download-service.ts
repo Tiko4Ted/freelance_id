@@ -21,6 +21,7 @@ export type CardTokenState =
 
 export type CardDownloadResult =
   | { status: "ok"; stream: Readable; filename: string }
+  | { status: "ok_url"; url: string }
   | { status: "invalid_dob"; remainingAttempts: number }
   | { status: "locked"; retryAfterSeconds: number }
   | { status: "expired" }
@@ -165,6 +166,13 @@ export class CardDownloadService {
 
     if (!(await this.storage.exists(application.cardObjectKey))) {
       return { status: "not_found" };
+    }
+
+    if (this.storage.createSignedReadUrl) {
+      return {
+        status: "ok_url",
+        url: await this.storage.createSignedReadUrl(application.cardObjectKey, 300),
+      };
     }
 
     return {

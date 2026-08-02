@@ -9,6 +9,13 @@ async function main() {
   const service = createSelfieRetentionPurgeService();
 
   if (process.argv.includes("--watch")) {
+    if ((process.env.SCHEDULER_DRIVER ?? "node-cron") !== "node-cron") {
+      console.info(
+        "Selfie retention node-cron scheduler disabled by SCHEDULER_DRIVER.",
+      );
+      return;
+    }
+
     startSelfieRetentionPurgeScheduler({
       service,
       onResult(result) {

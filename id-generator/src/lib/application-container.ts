@@ -27,11 +27,11 @@ import {
   type ScanDecisionService,
 } from "@/lib/services/scan-decision-service";
 import {
-  createLocalFilesystemThumbnailStorage,
+  createThumbnailStorageService,
   DisabledThumbnailStorage,
   type ThumbnailStorage,
 } from "@/lib/storage/thumbnail-storage";
-import { LocalFilesystemStorageService } from "@/lib/storage/local-filesystem-storage";
+import { createStorageService } from "@/lib/storage/storage-factory";
 
 const cardRateLimiter = new InMemoryCardRateLimiter();
 
@@ -62,13 +62,13 @@ export function createAuditService(): AuditService {
 }
 
 export function createCardService(): CardService {
-  return new CardService(createLocalFilesystemStorageService());
+  return new CardService(createStorageService());
 }
 
 export function createCardDownloadService(): CardDownloadService {
   return new CardDownloadService(
     new PrismaCardDownloadRepository(prisma),
-    createLocalFilesystemStorageService(),
+    createStorageService(),
     createAuditService(),
     cardRateLimiter,
   );
@@ -138,23 +138,5 @@ function createThumbnailStorage(
     return new DisabledThumbnailStorage();
   }
 
-  if (!process.env.STORAGE_ROOT_PATH) {
-    throw new Error(
-      "STORAGE_ROOT_PATH is required in demo selfie retention mode.",
-    );
-  }
-
-  return createLocalFilesystemThumbnailStorage({
-    rootPath: process.env.STORAGE_ROOT_PATH,
-  });
-}
-
-function createLocalFilesystemStorageService(): LocalFilesystemStorageService {
-  if (!process.env.STORAGE_ROOT_PATH) {
-    throw new Error("STORAGE_ROOT_PATH is required for private card storage.");
-  }
-
-  return new LocalFilesystemStorageService({
-    rootPath: process.env.STORAGE_ROOT_PATH,
-  });
+  return createThumbnailStorageService();
 }

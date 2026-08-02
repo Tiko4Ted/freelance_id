@@ -10,6 +10,7 @@ export interface StorageService {
   get(key: string): Promise<Readable>;
   delete(key: string): Promise<void>;
   exists(key: string): Promise<boolean>;
+  createSignedReadUrl?(key: string, expiresInSeconds: number): Promise<string>;
 }
 
 export class LocalFilesystemStorageService implements StorageService {
