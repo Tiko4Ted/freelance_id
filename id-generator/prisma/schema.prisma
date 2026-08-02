@@ -1,0 +1,142 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model FreelanceIdApplication {
+  id                       String              @id @default(uuid()) @db.Uuid
+  legalName                String              @map("legal_name")
+  normalizedLegalName      String              @map("normalized_legal_name")
+  dateOfBirth              DateTime            @map("date_of_birth") @db.Date
+  email                    String
+  phone                    String
+  consentAt                DateTime            @map("consent_at")
+  status                   ApplicationStatus   @default(PENDING)
+  finalDecisionSource      DecisionSource?     @map("final_decision_source")
+  rejectionReason          String?             @map("rejection_reason")
+  freelanceIdCode          String?             @unique @map("freelance_id_code")
+  serialNumber             String?             @unique @map("serial_number")
+  cardObjectKey            String?             @map("card_object_key")
+  cardTokenHash            String?             @map("card_token_hash")
+  cardTokenExpiresAt       DateTime?           @map("card_token_expires_at")
+  selfieRetentionExpiresAt DateTime?           @map("selfie_retention_expires_at")
+  submittedAt              DateTime            @default(now()) @map("submitted_at")
+  reviewedAt               DateTime?           @map("reviewed_at")
+  reviewedByAdminId        String?             @map("reviewed_by_admin_id") @db.Uuid
+  reapplyCooldownUntil     DateTime?           @map("reapply_cooldown_until")
+  createdAt                DateTime            @default(now()) @map("created_at")
+  updatedAt                DateTime            @updatedAt @map("updated_at")
+
+  reviewedByAdmin          AdminUser?          @relation("ReviewedApplications", fields: [reviewedByAdminId], references: [id])
+  scanAttempts             ScanAttempt[]
+  auditLogs                AuditLog[]
+  syncAttempts             SyncAttempt[]
+
+  @@index([normalizedLegalName, dateOfBirth])
+  @@index([status])
+  @@map("freelance_id_applications")
+}
+
+model ScanAttempt {
+  id              String                 @id @default(uuid()) @db.Uuid
+  applicationId   String                 @map("application_id") @db.Uuid
+  attemptNumber   Int                    @map("attempt_number")
+  timestamp       DateTime               @default(now())
+  detectionResult ScanResult             @map("detection_result")
+  confidenceScore Float?                 @map("confidence_score")
+  failureReason   String?                @map("failure_reason")
+  thumbnailKey    String?                @map("thumbnail_key")
+  createdAt       DateTime               @default(now()) @map("created_at")
+  updatedAt       DateTime               @updatedAt @map("updated_at")
+
+  application     FreelanceIdApplication @relation(fields: [applicationId], references: [id])
+
+  @@unique([applicationId, attemptNumber])
+  @@index([applicationId])
+  @@map("scan_attempts")
+}
+
+model IdSequence {
+  id        String   @id @default(uuid()) @db.Uuid
+  name      String   @unique
+  counter   Int      @default(0)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("id_sequences")
+}
+
+model AdminUser {
+  id                   String                   @id @default(uuid()) @db.Uuid
+  email                String                   @unique
+  passwordHash         String                   @map("password_hash")
+  totpSecret           String                   @map("totp_secret")
+  mfaEnabled           Boolean                  @default(true) @map("mfa_enabled")
+  createdAt            DateTime                 @default(now()) @map("created_at")
+  updatedAt            DateTime                 @updatedAt @map("updated_at")
+
+  reviewedApplications FreelanceIdApplication[] @relation("ReviewedApplications")
+
+  @@map("admin_users")
+}
+
+model AuditLog {
+  id            String                  @id @default(uuid()) @db.Uuid
+  applicationId String?                 @map("application_id") @db.Uuid
+  adminId       String?                 @map("admin_id") @db.Uuid
+  action        String
+  metadata      Json?
+  ipAddress     String?                 @map("ip_address")
+  userAgent     String?                 @map("user_agent")
+  timestamp     DateTime                @default(now())
+  createdAt     DateTime                @default(now()) @map("created_at")
+  updatedAt     DateTime                @updatedAt @map("updated_at")
+
+  application   FreelanceIdApplication? @relation(fields: [applicationId], references: [id])
+
+  @@index([applicationId])
+  @@index([adminId])
+  @@index([action])
+  @@map("audit_logs")
+}
+
+model SyncAttempt {
+  id             String                 @id @default(uuid()) @db.Uuid
+  applicationId  String                 @map("application_id") @db.Uuid
+  idempotencyKey String                 @unique @map("idempotency_key")
+  status         String
+  responseCode   Int?                   @map("response_code")
+  attemptedAt    DateTime               @default(now()) @map("attempted_at")
+  createdAt      DateTime               @default(now()) @map("created_at")
+  updatedAt      DateTime               @updatedAt @map("updated_at")
+
+  application    FreelanceIdApplication @relation(fields: [applicationId], references: [id])
+
+  @@index([applicationId])
+  @@index([status])
+  @@map("sync_attempts")
+}
+
+enum ApplicationStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum DecisionSource {
+  AUTO
+  ADMIN_REVIEW
+}
+
+enum ScanResult {
+  PASS
+  FAIL_NO_FACE
+  FAIL_OFF_CENTER
+  FAIL_LOW_LIGHT
+  FAIL_BLURRY
+  FAIL_MULTIPLE_FACES
+}
