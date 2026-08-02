@@ -8,7 +8,11 @@ import {
   selfieRetentionPurgeSchedule,
 } from "@/lib/jobs/selfie-retention-scheduler";
 import { SelfieRetentionPurgeService } from "@/lib/services/selfie-retention-purge-service";
-import type { ThumbnailStorage } from "@/lib/storage/thumbnail-storage";
+import { LocalFilesystemStorageService } from "@/lib/storage/local-filesystem-storage";
+import { LocalFilesystemThumbnailStorage } from "@/lib/storage/thumbnail-storage";
+import { mkdtemp, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import path from "node:path";
 import { describe, expect, it } from "vitest";
 import type { ApplicationStatus, DecisionSource } from "@/generated/prisma/client";
 
@@ -19,29 +23,43 @@ describe("selfie retention scheduler", () => {
 
   it("purges seeded expired thumbnails through the scheduled job path", async () => {
     const repository = new InMemoryScanAttemptRepository();
-    const storage = new InMemoryThumbnailStorage();
-    repository.seedExpiredThumbnail({
-      applicationId: "application-1",
-      thumbnailKey: "selfie-thumbnails/application-1/1.jpg",
-      expiresAt: new Date("2026-08-02T10:00:00Z"),
-    });
-
-    const service = new SelfieRetentionPurgeService(repository, storage);
-    const result = await runScheduledSelfiePurgeJob(
-      service,
-      new Date("2026-08-02T11:00:00Z"),
+    const storageRoot = await mkdtemp(
+      path.join(tmpdir(), "id-generator-storage-"),
     );
-
-    expect(result).toMatchObject({
-      applicationsPurged: 1,
-      thumbnailsDeleted: 1,
-      ranAt: new Date("2026-08-02T11:00:00Z"),
+    const objectStorage = new LocalFilesystemStorageService({
+      rootPath: storageRoot,
     });
-    expect(storage.deletedKeys).toEqual([
-      "selfie-thumbnails/application-1/1.jpg",
-    ]);
-    expect(repository.application.selfieRetentionExpiresAt).toBeNull();
-    expect(repository.attempt.thumbnailKey).toBeNull();
+    const storage = new LocalFilesystemThumbnailStorage(objectStorage);
+    const stored = await storage.uploadJpegThumbnail({
+      applicationId: "application-1",
+      attemptNumber: 1,
+      dataUrl: tinyJpegDataUrl(),
+    });
+
+    try {
+      repository.seedExpiredThumbnail({
+        applicationId: "application-1",
+        thumbnailKey: stored.key,
+        expiresAt: new Date("2026-08-02T10:00:00Z"),
+      });
+
+      const service = new SelfieRetentionPurgeService(repository, storage);
+      const result = await runScheduledSelfiePurgeJob(
+        service,
+        new Date("2026-08-02T11:00:00Z"),
+      );
+
+      expect(result).toMatchObject({
+        applicationsPurged: 1,
+        thumbnailsDeleted: 1,
+        ranAt: new Date("2026-08-02T11:00:00Z"),
+      });
+      await expect(objectStorage.exists(stored.key)).resolves.toBe(false);
+      expect(repository.application.selfieRetentionExpiresAt).toBeNull();
+      expect(repository.attempt.thumbnailKey).toBeNull();
+    } finally {
+      await rm(storageRoot, { recursive: true, force: true });
+    }
   });
 });
 
@@ -138,14 +156,6 @@ class InMemoryScanAttemptRepository implements ScanAttemptRepository {
   }
 }
 
-class InMemoryThumbnailStorage implements ThumbnailStorage {
-  deletedKeys: string[] = [];
-
-  async uploadJpegThumbnail() {
-    return { key: "unused.jpg" };
-  }
-
-  async deleteObject(key: string): Promise<void> {
-    this.deletedKeys.push(key);
-  }
+function tinyJpegDataUrl(): string {
+  return "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2w==";
 }

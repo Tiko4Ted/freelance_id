@@ -11,6 +11,25 @@ export class NotificationService {
         legalName: event.payload.legalName,
       });
     });
+
+    bus.subscribe("application.rejected", async (event) => {
+      await this.sendApplicationRejectedEmail({
+        to: event.payload.email,
+        legalName: event.payload.legalName,
+        rejectionReason: event.payload.rejectionReason,
+        reapplyCooldownUntil: event.payload.reapplyCooldownUntil,
+      });
+    });
+
+    bus.subscribe("application.approved", async (event) => {
+      await this.sendApplicationApprovedEmail({
+        to: event.payload.email,
+        legalName: event.payload.legalName,
+        freelanceIdCode: event.payload.freelanceIdCode,
+        serialNumber: event.payload.serialNumber,
+        cardUrl: `${getAppBaseUrl()}/card/${event.payload.cardToken}`,
+      });
+    });
   }
 
   /**
@@ -32,4 +51,57 @@ export class NotificationService {
       ].join("\n"),
     });
   }
+
+  async sendApplicationRejectedEmail(input: {
+    to: string;
+    legalName: string;
+    rejectionReason: string;
+    reapplyCooldownUntil: Date;
+  }): Promise<void> {
+    await this.emailTransport.send({
+      to: input.to,
+      subject: "Freelance ID demo application update",
+      text: [
+        `Hello ${input.legalName},`,
+        "",
+        "Your Freelance ID demo application was rejected after admin review.",
+        `Reason: ${input.rejectionReason}`,
+        `You may reapply after ${input.reapplyCooldownUntil.toISOString().slice(0, 10)}.`,
+        "",
+        "This is a portfolio demo, not real KYC or government identity verification.",
+      ].join("\n"),
+    });
+  }
+
+  async sendApplicationApprovedEmail(input: {
+    to: string;
+    legalName: string;
+    freelanceIdCode: string;
+    serialNumber: string;
+    cardUrl: string;
+  }): Promise<void> {
+    await this.emailTransport.send({
+      to: input.to,
+      subject: "Freelance ID demo approved",
+      text: [
+        `Hello ${input.legalName},`,
+        "",
+        "Your Freelance ID demo application was approved.",
+        `Freelance ID: ${input.freelanceIdCode}`,
+        `Serial: ${input.serialNumber}`,
+        `Download your card: ${input.cardUrl}`,
+        "",
+        "The card link expires in 48 hours and requires your date of birth.",
+        "This is a portfolio demo, not real KYC or government identity verification.",
+      ].join("\n"),
+    });
+  }
+}
+
+function getAppBaseUrl(): string {
+  return (
+    process.env.APP_BASE_URL ??
+    process.env.NEXT_PUBLIC_APP_BASE_URL ??
+    "http://localhost:3000"
+  ).replace(/\/$/, "");
 }

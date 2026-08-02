@@ -6,31 +6,71 @@ import {
   SmtpEmailTransport,
   type EmailTransport,
 } from "@/lib/notifications/email-transport";
+import { PrismaAdminReviewRepository } from "@/lib/repositories/admin-review-repository";
 import { PrismaApplicationRepository } from "@/lib/repositories/application-repository";
+import { PrismaCardDownloadRepository } from "@/lib/repositories/card-download-repository";
+import { PrismaIdSequenceRepository } from "@/lib/repositories/id-sequence-repository";
 import { PrismaScanAttemptRepository } from "@/lib/repositories/scan-attempt-repository";
 import { HashSeededRandom } from "@/lib/scan/seeded-rng";
+import { AdminReviewService } from "@/lib/services/admin-review-service";
 import { ApplicationService } from "@/lib/services/application-service";
+import { AuditService } from "@/lib/services/audit-service";
+import { CardDownloadService, InMemoryCardRateLimiter } from "@/lib/services/card-download-service";
+import { CardService } from "@/lib/services/card-service";
+import { IdGenerationService } from "@/lib/services/id-generation-service";
 import { NotificationService } from "@/lib/services/notification-service";
 import { SelfieRetentionPurgeService } from "@/lib/services/selfie-retention-purge-service";
+import { SyncService } from "@/lib/services/sync-service";
 import {
   DemoModeDecision,
   ReviewModeDecision,
   type ScanDecisionService,
 } from "@/lib/services/scan-decision-service";
 import {
+  createLocalFilesystemThumbnailStorage,
   DisabledThumbnailStorage,
-  S3ThumbnailStorage,
   type ThumbnailStorage,
 } from "@/lib/storage/thumbnail-storage";
+import { LocalFilesystemStorageService } from "@/lib/storage/local-filesystem-storage";
+
+const cardRateLimiter = new InMemoryCardRateLimiter();
 
 export function createApplicationService(): ApplicationService {
-  const eventBus = new InMemoryDomainEventBus();
-  const notificationService = new NotificationService(createEmailTransport());
-  notificationService.subscribeTo(eventBus);
+  const eventBus = createNotificationEventBus();
 
   return new ApplicationService(
     new PrismaApplicationRepository(prisma),
     eventBus,
+  );
+}
+
+export function createAdminReviewService(): AdminReviewService {
+  const repository = new PrismaAdminReviewRepository(prisma);
+
+  return new AdminReviewService(
+    repository,
+    new IdGenerationService(new PrismaIdSequenceRepository(prisma)),
+    new SyncService(),
+    createNotificationEventBus(),
+    new AuditService(repository),
+    createCardService(),
+  );
+}
+
+export function createAuditService(): AuditService {
+  return new AuditService(new PrismaAdminReviewRepository(prisma));
+}
+
+export function createCardService(): CardService {
+  return new CardService(createLocalFilesystemStorageService());
+}
+
+export function createCardDownloadService(): CardDownloadService {
+  return new CardDownloadService(
+    new PrismaCardDownloadRepository(prisma),
+    createLocalFilesystemStorageService(),
+    createAuditService(),
+    cardRateLimiter,
   );
 }
 
@@ -80,6 +120,13 @@ function createEmailTransport(): EmailTransport {
   return new ConsoleEmailTransport();
 }
 
+function createNotificationEventBus(): InMemoryDomainEventBus {
+  const eventBus = new InMemoryDomainEventBus();
+  const notificationService = new NotificationService(createEmailTransport());
+  notificationService.subscribeTo(eventBus);
+  return eventBus;
+}
+
 function getSelfieRetentionMode(): "ephemeral" | "demo" {
   return process.env.SELFIE_RETENTION_MODE === "demo" ? "demo" : "ephemeral";
 }
@@ -91,23 +138,23 @@ function createThumbnailStorage(
     return new DisabledThumbnailStorage();
   }
 
-  const required = {
-    bucket: process.env.S3_BUCKET,
-    accessKeyId: process.env.S3_ACCESS_KEY_ID,
-    secretAccessKey: process.env.S3_SECRET_ACCESS_KEY,
-  };
-
-  if (!required.bucket || !required.accessKeyId || !required.secretAccessKey) {
+  if (!process.env.STORAGE_ROOT_PATH) {
     throw new Error(
-      "S3_BUCKET, S3_ACCESS_KEY_ID, and S3_SECRET_ACCESS_KEY are required in demo selfie retention mode.",
+      "STORAGE_ROOT_PATH is required in demo selfie retention mode.",
     );
   }
 
-  return new S3ThumbnailStorage({
-    endpoint: process.env.S3_ENDPOINT,
-    region: process.env.S3_REGION ?? "auto",
-    bucket: required.bucket,
-    accessKeyId: required.accessKeyId,
-    secretAccessKey: required.secretAccessKey,
+  return createLocalFilesystemThumbnailStorage({
+    rootPath: process.env.STORAGE_ROOT_PATH,
+  });
+}
+
+function createLocalFilesystemStorageService(): LocalFilesystemStorageService {
+  if (!process.env.STORAGE_ROOT_PATH) {
+    throw new Error("STORAGE_ROOT_PATH is required for private card storage.");
+  }
+
+  return new LocalFilesystemStorageService({
+    rootPath: process.env.STORAGE_ROOT_PATH,
   });
 }

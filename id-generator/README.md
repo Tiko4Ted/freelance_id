@@ -37,9 +37,12 @@ available for portfolio environments that cannot terminate client certificates,
 but that fallback must be documented in deployment notes when used.
 
 Demo-mode selfie thumbnails are purged by `npm run selfies:purge:scheduler`,
-which starts an hourly `node-cron` job. The object storage bucket still must be
-verified separately with an unauthenticated listing request after the storage
-provider is chosen.
+which starts an hourly `node-cron` job. Private generated cards and demo
+thumbnails are stored under `STORAGE_ROOT_PATH`, which must be an absolute path
+outside `public/` and outside any nginx/static web root. On the VPS, create the
+directory for the app runtime user with restrictive permissions such as
+`chmod 700 /var/lib/id-generator/storage`; stored files are served only through
+authenticated or token-gated route handlers.
 
 ## Development
 

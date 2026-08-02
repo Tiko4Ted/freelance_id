@@ -71,6 +71,38 @@ describe("NotificationService", () => {
       });
     }
   }, 15_000);
+
+  it("sends approval email with ID, serial, and DOB-gated card link", async () => {
+    const transport = new RecordingEmailTransport();
+    const service = new NotificationService(transport);
+    const originalBaseUrl = process.env.APP_BASE_URL;
+    process.env.APP_BASE_URL = "https://id.example.test";
+
+    try {
+      await service.sendApplicationApprovedEmail({
+        to: "mary@example.com",
+        legalName: "Mary Ann Smith",
+        freelanceIdCode: "FL-MARY-SMITH-000001",
+        serialNumber: "SER-SMITH-000001",
+        cardUrl: `${process.env.APP_BASE_URL}/card/raw-token`,
+      });
+    } finally {
+      process.env.APP_BASE_URL = originalBaseUrl;
+    }
+
+    expect(transport.messages[0]).toMatchObject({
+      to: "mary@example.com",
+      subject: "Freelance ID demo approved",
+    });
+    expect(transport.messages[0].text).toContain(
+      "Freelance ID: FL-MARY-SMITH-000001",
+    );
+    expect(transport.messages[0].text).toContain("Serial: SER-SMITH-000001");
+    expect(transport.messages[0].text).toContain(
+      "https://id.example.test/card/raw-token",
+    );
+    expect(transport.messages[0].text).toContain("requires your date of birth");
+  });
 });
 
 class AlwaysCreateApplicationRepository implements ApplicationRepository {
@@ -96,4 +128,20 @@ function validApplication(): ValidatedApplicationForm {
     phone: "+1 555 123 4567",
     consentAt: new Date("2026-08-02T00:00:00Z"),
   };
+}
+
+class RecordingEmailTransport {
+  messages: {
+    to: string;
+    subject: string;
+    text: string;
+  }[] = [];
+
+  async send(message: {
+    to: string;
+    subject: string;
+    text: string;
+  }): Promise<void> {
+    this.messages.push(message);
+  }
 }

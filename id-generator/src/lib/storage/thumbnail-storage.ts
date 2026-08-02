@@ -1,4 +1,7 @@
-import { DeleteObjectCommand, PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
+import {
+  LocalFilesystemStorageService,
+  type StorageService,
+} from "@/lib/storage/local-filesystem-storage";
 
 export type StoredThumbnail = {
   key: string;
@@ -13,28 +16,8 @@ export interface ThumbnailStorage {
   deleteObject(key: string): Promise<void>;
 }
 
-export class S3ThumbnailStorage implements ThumbnailStorage {
-  private readonly client: S3Client;
-
-  constructor(
-    private readonly config: {
-      endpoint?: string;
-      region: string;
-      bucket: string;
-      accessKeyId: string;
-      secretAccessKey: string;
-    },
-  ) {
-    this.client = new S3Client({
-      endpoint: config.endpoint || undefined,
-      region: config.region,
-      credentials: {
-        accessKeyId: config.accessKeyId,
-        secretAccessKey: config.secretAccessKey,
-      },
-      forcePathStyle: Boolean(config.endpoint),
-    });
-  }
+export class LocalFilesystemThumbnailStorage implements ThumbnailStorage {
+  constructor(private readonly storage: StorageService) {}
 
   async uploadJpegThumbnail(input: {
     applicationId: string;
@@ -42,25 +25,13 @@ export class S3ThumbnailStorage implements ThumbnailStorage {
     dataUrl: string;
   }): Promise<StoredThumbnail> {
     const key = `selfie-thumbnails/${input.applicationId}/${input.attemptNumber}.jpg`;
-    await this.client.send(
-      new PutObjectCommand({
-        Bucket: this.config.bucket,
-        Key: key,
-        Body: decodeDataUrl(input.dataUrl),
-        ContentType: "image/jpeg",
-      }),
-    );
+    await this.storage.put(key, decodeDataUrl(input.dataUrl));
 
     return { key };
   }
 
   async deleteObject(key: string): Promise<void> {
-    await this.client.send(
-      new DeleteObjectCommand({
-        Bucket: this.config.bucket,
-        Key: key,
-      }),
-    );
+    await this.storage.delete(key);
   }
 }
 
@@ -72,6 +43,16 @@ export class DisabledThumbnailStorage implements ThumbnailStorage {
   async deleteObject(): Promise<void> {
     return undefined;
   }
+}
+
+export function createLocalFilesystemThumbnailStorage(input: {
+  rootPath: string;
+}): ThumbnailStorage {
+  return new LocalFilesystemThumbnailStorage(
+    new LocalFilesystemStorageService({
+      rootPath: input.rootPath,
+    }),
+  );
 }
 
 function decodeDataUrl(dataUrl: string): Buffer {
