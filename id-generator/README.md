@@ -36,6 +36,11 @@ production-intended sync transport is mTLS. A strong bearer token fallback is
 available for portfolio environments that cannot terminate client certificates,
 but that fallback must be documented in deployment notes when used.
 
+Demo-mode selfie thumbnails are purged by `npm run selfies:purge:scheduler`,
+which starts an hourly `node-cron` job. The object storage bucket still must be
+verified separately with an unauthenticated listing request after the storage
+provider is chosen.
+
 ## Development
 
 ```bash
