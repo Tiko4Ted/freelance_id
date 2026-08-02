@@ -28,6 +28,7 @@ model FreelanceIdApplication {
   reviewedAt               DateTime?           @map("reviewed_at")
   reviewedByAdminId        String?             @map("reviewed_by_admin_id") @db.Uuid
   reapplyCooldownUntil     DateTime?           @map("reapply_cooldown_until")
+  adminOverrideCooldown    Boolean             @default(false) @map("admin_override_cooldown")
   createdAt                DateTime            @default(now()) @map("created_at")
   updatedAt                DateTime            @updatedAt @map("updated_at")
 
