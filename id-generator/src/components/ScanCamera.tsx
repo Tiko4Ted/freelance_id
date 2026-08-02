@@ -30,6 +30,7 @@ export function ScanCamera({ applicationId }: { applicationId: string }) {
   const [metrics, setMetrics] = useState<BrowserScanMetrics | null>(null);
   const [decision, setDecision] = useState<ScanDecisionOutcome | null>(null);
   const [showProgress, setShowProgress] = useState(false);
+  const [scanLocked, setScanLocked] = useState(false);
   const retentionMode = getRetentionMode();
 
   const readyForCapture = useMemo(() => {
@@ -46,7 +47,7 @@ export function ScanCamera({ applicationId }: { applicationId: string }) {
   const submitCurrentFrame = useCallback(async () => {
     const video = videoRef.current;
     const currentMetrics = lastMetricsRef.current;
-    if (!video || !currentMetrics || submittingRef.current) {
+    if (!video || !currentMetrics || submittingRef.current || scanLocked) {
       return;
     }
 
@@ -54,36 +55,42 @@ export function ScanCamera({ applicationId }: { applicationId: string }) {
     setShowProgress(true);
     setDecision(null);
 
-    const startedAt = Date.now();
-    const thumbnailDataUrl =
-      retentionMode === "demo" ? captureThumbnailDataUrl(video) : null;
-    const payload = createScanSubmissionPayload({
-      metrics: currentMetrics,
-      retentionMode,
-      thumbnailDataUrl,
-    });
-    const responsePromise = fetch(`/api/applications/${applicationId}/scan`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    }).then(async (response) => {
-      if (!response.ok) {
-        throw new Error("Scan submission failed.");
-      }
+    try {
+      const startedAt = Date.now();
+      const thumbnailDataUrl =
+        retentionMode === "demo" ? captureThumbnailDataUrl(video) : null;
+      const payload = createScanSubmissionPayload({
+        metrics: currentMetrics,
+        retentionMode,
+        thumbnailDataUrl,
+      });
+      const responsePromise = fetch(`/api/applications/${applicationId}/scan`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      }).then(async (response) => {
+        if (!response.ok) {
+          throw new Error("Scan submission failed.");
+        }
 
-      return (await response.json()) as ScanDecisionOutcome;
-    });
+        return (await response.json()) as ScanDecisionOutcome;
+      });
 
-    const [result] = await Promise.all([
-      responsePromise,
-      delay(Math.max(0, minimumRevealMs - (Date.now() - startedAt))),
-    ]);
+      const [result] = await Promise.all([
+        responsePromise,
+        delay(Math.max(0, minimumRevealMs - (Date.now() - startedAt))),
+      ]);
 
-    setDecision(result);
-    setShowProgress(false);
-    submittingRef.current = false;
-    stableSinceRef.current = null;
-  }, [applicationId, retentionMode]);
+      setDecision(result);
+      setScanLocked(result.status !== "retry");
+    } catch {
+      setStatusText("Scan submission failed. Try again.");
+    } finally {
+      setShowProgress(false);
+      submittingRef.current = false;
+      stableSinceRef.current = null;
+    }
+  }, [applicationId, retentionMode, scanLocked]);
 
   useEffect(() => {
     let cancelled = false;
@@ -138,7 +145,11 @@ export function ScanCamera({ applicationId }: { applicationId: string }) {
 
     const timer = window.setInterval(async () => {
       const video = videoRef.current;
-      if (!video || video.readyState < HTMLMediaElement.HAVE_CURRENT_DATA) {
+      if (
+        !video ||
+        scanLocked ||
+        video.readyState < HTMLMediaElement.HAVE_CURRENT_DATA
+      ) {
         return;
       }
 
@@ -171,7 +182,7 @@ export function ScanCamera({ applicationId }: { applicationId: string }) {
     }, 300);
 
     return () => window.clearInterval(timer);
-  }, [cameraState, submitCurrentFrame]);
+  }, [cameraState, scanLocked, submitCurrentFrame]);
 
   return (
     <div className="grid gap-5">
@@ -195,7 +206,9 @@ export function ScanCamera({ applicationId }: { applicationId: string }) {
         <DecisionPanel decision={decision} />
         <button
           className="h-11 rounded-md bg-cyan-300 px-4 text-sm font-semibold text-neutral-950 transition hover:bg-cyan-200 disabled:cursor-not-allowed disabled:bg-neutral-700 disabled:text-neutral-300"
-          disabled={cameraState !== "ready" || showProgress || !metrics}
+          disabled={
+            cameraState !== "ready" || showProgress || !metrics || scanLocked
+          }
           onClick={() => void submitCurrentFrame()}
           type="button"
         >
