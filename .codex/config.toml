@@ -1,0 +1,20 @@
+# ==========================================
+# Codex Runtime Configuration
+# ==========================================
+
+# Model
+#model = "gpt-5-codex"
+
+# Ask for approval only if a command fails.
+# Valid values depend on the Codex version you have installed.
+approval_policy = "never"
+
+# Allow unrestricted access to the workspace.
+sandbox_mode = "danger-full-access"
+
+# Reasoning
+model_reasoning_effort = "high"
+
+# Experimental features
+[features]
+exec_unified = false
