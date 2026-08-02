@@ -6,7 +6,10 @@ import {
 import type { AuditRequestContext } from "@/lib/audit/request-context";
 import type { AuditLogEntry } from "@/lib/services/audit-service";
 import type { GeneratedFreelanceIdentity } from "@/lib/services/id-generation-service";
-import type { QueuedSyncAttempt } from "@/lib/services/sync-service";
+import type {
+  PendingSyncAttempt,
+  SyncAttemptResult,
+} from "@/lib/services/sync-service";
 
 export type ApprovedCardPersistence = {
   cardObjectKey: string;
@@ -31,9 +34,14 @@ export interface AdminReviewRepository {
     adminId: string;
     generatedIdentity: GeneratedFreelanceIdentity;
     preparedCard: ApprovedCardPersistence;
-    syncAttempt: QueuedSyncAttempt;
+    syncAttempt: PendingSyncAttempt;
     auditLog: AuditLogEntry;
     context: AuditRequestContext;
+  }): Promise<void>;
+  recordSyncAttemptResult(input: {
+    idempotencyKey: string;
+    result: SyncAttemptResult;
+    attemptedAt: Date;
   }): Promise<void>;
   rejectApplication(input: {
     applicationId: string;
@@ -69,7 +77,7 @@ export class PrismaAdminReviewRepository implements AdminReviewRepository {
     adminId: string;
     generatedIdentity: GeneratedFreelanceIdentity;
     preparedCard: ApprovedCardPersistence;
-    syncAttempt: QueuedSyncAttempt;
+    syncAttempt: PendingSyncAttempt;
     auditLog: AuditLogEntry;
     context: AuditRequestContext;
   }): Promise<void> {
@@ -144,6 +152,21 @@ export class PrismaAdminReviewRepository implements AdminReviewRepository {
       await tx.auditLog.create({
         data: input.auditLog,
       });
+    });
+  }
+
+  async recordSyncAttemptResult(input: {
+    idempotencyKey: string;
+    result: SyncAttemptResult;
+    attemptedAt: Date;
+  }): Promise<void> {
+    await this.prisma.syncAttempt.update({
+      where: { idempotencyKey: input.idempotencyKey },
+      data: {
+        status: input.result.status,
+        responseCode: input.result.responseCode,
+        attemptedAt: input.attemptedAt,
+      },
     });
   }
 

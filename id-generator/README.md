@@ -36,6 +36,13 @@ production-intended sync transport is mTLS. A strong bearer token fallback is
 available for portfolio environments that cannot terminate client certificates,
 but that fallback must be documented in deployment notes when used.
 
+Approval-to-main-app sync is non-blocking. The admin approval transaction issues
+the freelance ID, stores the card token hash, and creates a `PENDING`
+`SyncAttempt`. After that transaction commits, the app calls the main platform
+sync endpoint and marks the attempt `SUCCESS` or `FAILED`. A failed network call
+or non-2xx response does not roll back the approval; the stored idempotency key
+supports manual retry without duplicating the identity in the main app.
+
 Demo-mode selfie thumbnails are purged by `npm run selfies:purge:scheduler`,
 which starts an hourly `node-cron` job. Private generated cards and demo
 thumbnails are stored under `STORAGE_ROOT_PATH`, which must be an absolute path

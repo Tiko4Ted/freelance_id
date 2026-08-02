@@ -72,6 +72,8 @@ export class AdminReviewService {
     });
     const syncAttempt = this.syncService.createApprovalSyncAttempt({
       applicationId: application.id,
+      legalName: application.legalName,
+      dateOfBirth: application.dateOfBirth,
       generatedIdentity,
     });
 
@@ -106,6 +108,14 @@ export class AdminReviewService {
         .catch(() => undefined);
       throw error;
     }
+
+    const syncResult =
+      await this.syncService.flushApprovalSyncAttempt(syncAttempt);
+    await this.repository.recordSyncAttemptResult({
+      idempotencyKey: syncAttempt.idempotencyKey,
+      result: syncResult,
+      attemptedAt: new Date(),
+    });
 
     await this.eventBus.publish({
       type: "application.approved",

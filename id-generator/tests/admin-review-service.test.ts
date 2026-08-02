@@ -10,7 +10,10 @@ import { AdminReviewService } from "@/lib/services/admin-review-service";
 import { AuditService } from "@/lib/services/audit-service";
 import type { PreparedCard } from "@/lib/services/card-service";
 import type { GeneratedFreelanceIdentity } from "@/lib/services/id-generation-service";
-import type { QueuedSyncAttempt } from "@/lib/services/sync-service";
+import type {
+  PendingSyncAttempt,
+  SyncAttemptResult,
+} from "@/lib/services/sync-service";
 import { describe, expect, it } from "vitest";
 
 const context: AuditRequestContext = {
@@ -45,7 +48,7 @@ describe("AdminReviewService", () => {
     expect(repository.rejections).toHaveLength(0);
   });
 
-  it("generates IDs before creating the queued sync attempt and approval transaction", async () => {
+  it("generates IDs before creating the sync attempt, approval transaction, and non-blocking sync call", async () => {
     const calls: string[] = [];
     const repository = new FakeAdminReviewRepository(calls);
     const service = new AdminReviewService(
@@ -71,6 +74,8 @@ describe("AdminReviewService", () => {
       "prepare-card",
       "create-sync-attempt",
       "approval-transaction",
+      "flush-sync",
+      "record-sync-result",
     ]);
     expect(repository.approvals[0]).toMatchObject({
       adminId: "admin-1",
@@ -81,7 +86,14 @@ describe("AdminReviewService", () => {
       syncAttempt: {
         idempotencyKey:
           "approved-identity:application-1:FL-MARY-SMITH-000001",
-        status: "QUEUED",
+        status: "PENDING",
+        payload: {
+          freelanceIdCode: "FL-MARY-SMITH-000001",
+          serialNumber: "SER-SMITH-000001",
+          legalName: "Mary Ann Smith",
+          dateOfBirth: "1990-05-20",
+          isActive: true,
+        },
       },
       preparedCard: {
         cardObjectKey: "cards/application-1/FL-MARY-SMITH-000001.png",
@@ -97,6 +109,11 @@ describe("AdminReviewService", () => {
         timestamp: context.timestamp,
       },
       context,
+    });
+    expect(repository.syncResults[0]).toMatchObject({
+      idempotencyKey:
+        "approved-identity:application-1:FL-MARY-SMITH-000001",
+      result: { status: "FAILED", responseCode: 503 },
     });
   });
 
@@ -207,7 +224,14 @@ describe("PrismaAdminReviewRepository audit writes", () => {
       syncAttempt: {
         idempotencyKey:
           "approved-identity:application-1:FL-MARY-SMITH-000001",
-        status: "QUEUED",
+        status: "PENDING",
+        payload: {
+          freelanceIdCode: "FL-MARY-SMITH-000001",
+          serialNumber: "SER-SMITH-000001",
+          legalName: "Mary Ann Smith",
+          dateOfBirth: "1990-05-20",
+          isActive: true,
+        },
       },
       preparedCard: {
         cardObjectKey: "cards/application-1/FL-MARY-SMITH-000001.png",
@@ -256,7 +280,7 @@ describe("PrismaAdminReviewRepository audit writes", () => {
       applicationId: "application-1",
       idempotencyKey:
         "approved-identity:application-1:FL-MARY-SMITH-000001",
-      status: "QUEUED",
+      status: "PENDING",
       attemptedAt: context.timestamp,
     });
   });
@@ -329,6 +353,7 @@ class FakeAdminReviewRepository implements AdminReviewRepository {
   approvals: Parameters<AdminReviewRepository["approveApplication"]>[0][] = [];
   rejections: Parameters<AdminReviewRepository["rejectApplication"]>[0][] = [];
   auditLogs: Parameters<AdminReviewRepository["logAudit"]>[0][] = [];
+  syncResults: Parameters<AdminReviewRepository["recordSyncAttemptResult"]>[0][] = [];
 
   constructor(private readonly calls: string[] = []) {}
 
@@ -361,6 +386,13 @@ class FakeAdminReviewRepository implements AdminReviewRepository {
   ): Promise<void> {
     this.auditLogs.push(input);
   }
+
+  async recordSyncAttemptResult(
+    input: Parameters<AdminReviewRepository["recordSyncAttemptResult"]>[0],
+  ): Promise<void> {
+    this.calls.push("record-sync-result");
+    this.syncResults.push(input);
+  }
 }
 
 class FakeIdentityGenerationService {
@@ -379,13 +411,27 @@ class FakeIdentityGenerationService {
 class FakeSyncService {
   constructor(private readonly calls: string[]) {}
 
-  createApprovalSyncAttempt(): QueuedSyncAttempt {
+  createApprovalSyncAttempt(input: {
+    generatedIdentity: GeneratedFreelanceIdentity;
+  }): PendingSyncAttempt {
     this.calls.push("create-sync-attempt");
     return {
       idempotencyKey:
         "approved-identity:application-1:FL-MARY-SMITH-000001",
-      status: "QUEUED",
+      status: "PENDING",
+      payload: {
+        freelanceIdCode: input.generatedIdentity.freelanceIdCode,
+        serialNumber: input.generatedIdentity.serialNumber,
+        legalName: "Mary Ann Smith",
+        dateOfBirth: "1990-05-20",
+        isActive: true,
+      },
     };
+  }
+
+  async flushApprovalSyncAttempt(): Promise<SyncAttemptResult> {
+    this.calls.push("flush-sync");
+    return { status: "FAILED", responseCode: 503 };
   }
 }
 
