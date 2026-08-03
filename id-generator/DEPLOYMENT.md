@@ -10,7 +10,7 @@
 - Set Auth.js/admin secrets such as `AUTH_SECRET`.
 - Set `APP_BASE_URL` to the deployed Vercel URL before testing approval emails.
 - Confirm the main app sync endpoint is reachable from Vercel. If the main app is later restricted to the VPS/private network, this temporary Vercel demo may not sync to it; that is an expected demo-environment limitation.
-- Vercel Hobby accounts reject hourly Cron schedules. The committed `vercel.json` uses the requested hourly purge cadence, so this project needs a Pro plan for deployment as-is. A daily schedule would deploy on Hobby, but that is a deliberate cadence change.
+- Vercel Hobby accounts reject hourly Cron schedules. The temporary Vercel `vercel.json` uses a daily purge cadence so the demo can deploy publicly on the current plan. Upgrade to Pro and change it back to `0 * * * *` for hourly Vercel Cron; the VPS node-cron path remains hourly.
 
 ## VPS Deployment-Time Checks
 
