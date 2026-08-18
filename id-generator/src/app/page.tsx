@@ -3,9 +3,6 @@ export default function Home() {
     <main className="min-h-screen bg-neutral-950 px-6 py-10 text-neutral-50">
       <section className="mx-auto flex max-w-4xl flex-col gap-8">
         <div className="space-y-4">
-          <p className="text-sm font-medium uppercase tracking-wide text-cyan-300">
-            Portfolio demo
-          </p>
           <h1 className="max-w-3xl text-4xl font-semibold tracking-normal sm:text-5xl">
             Freelance ID Generator
           </h1>
