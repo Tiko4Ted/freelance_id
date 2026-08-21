@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import { createCardDownloadService } from "@/lib/application-container";
 
 export const metadata: Metadata = {
-  title: "Download Card | Freelance ID Demo",
+  title: "Download Card | Freelance ID",
 };
 
 export default async function CardDownloadPage({

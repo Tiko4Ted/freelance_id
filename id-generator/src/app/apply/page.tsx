@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import { ApplyForm } from "@/components/ApplyForm";
 
 export const metadata: Metadata = {
-  title: "Apply | Freelance ID Demo",
+  title: "Apply | Freelance ID",
 };
 
 export default function ApplyPage() {
@@ -15,7 +15,7 @@ export default function ApplyPage() {
             Application
           </p>
           <h1 className="text-3xl font-semibold tracking-normal sm:text-4xl">
-            Start your Freelance ID demo application
+            Start your Freelance ID application
           </h1>
           <p className="max-w-xl text-base leading-7 text-neutral-300">
             Submit basic contact details before the scan-quality step. This

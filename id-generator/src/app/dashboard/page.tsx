@@ -10,7 +10,7 @@ import {
 import { requireAdminMfaSession } from "@/lib/auth/admin-session";
 
 export const metadata: Metadata = {
-  title: "Dashboard | Freelance ID Demo",
+  title: "Dashboard | Freelance ID",
 };
 
 export default async function DashboardPage({

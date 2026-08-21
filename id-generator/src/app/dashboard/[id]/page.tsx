@@ -9,7 +9,7 @@ import { getDashboardApplicationDetail } from "@/lib/admin/dashboard-queries";
 import { requireAdminMfaSession } from "@/lib/auth/admin-session";
 
 export const metadata: Metadata = {
-  title: "Application Detail | Freelance ID Demo",
+  title: "Application Detail | Freelance ID",
 };
 
 export default async function DashboardDetailPage({

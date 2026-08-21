@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import { LoginForm } from "./LoginForm";
 
 export const metadata: Metadata = {
-  title: "Admin Login | Freelance ID Demo",
+  title: "Admin Login | Freelance ID",
 };
 
 export default function DashboardLoginPage() {

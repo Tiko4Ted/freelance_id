@@ -14,9 +14,9 @@ const geistMono = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "Freelance ID Demo",
+  title: "Freelance ID",
   description:
-    "A portfolio demo for freelance ID application intake and review workflows.",
+    "Freelance ID application intake and review workflows.",
 };
 
 export default function RootLayout({

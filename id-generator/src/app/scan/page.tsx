@@ -15,12 +15,12 @@ export default function ScanPage({
             Scan
           </p>
           <h1 className="text-3xl font-semibold tracking-normal sm:text-4xl">
-            Center your face for the demo scan
+            Center your face for the identity scan
           </h1>
           <p className="max-w-xl text-base leading-7 text-neutral-300">
             This checks face presence, framing, lighting, and image clarity
-            only. It is a portfolio demo, not real document, biometric, or
-            government identity verification.
+            only. It does not perform real document, biometric, or government
+            identity verification.
           </p>
           <div className="rounded-lg border border-neutral-800 bg-neutral-900 p-4 text-sm leading-6 text-neutral-300">
             Keep one face in frame, face the camera directly, and use steady

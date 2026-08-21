@@ -42,7 +42,7 @@ const rawApplicationFormSchema = z.object({
     .trim()
     .regex(phonePattern, "Enter a valid phone number."),
   consent: z.literal("on", {
-    error: "You must consent to this identity verification demo.",
+    error: "You must consent to this identity verification workflow.",
   }),
 });
 

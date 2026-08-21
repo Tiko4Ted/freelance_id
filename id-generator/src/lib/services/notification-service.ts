@@ -45,9 +45,9 @@ export class NotificationService {
       text: [
         `Hello ${input.legalName},`,
         "",
-        "Application received. Proceed to the identity scan to continue your Freelance ID demo application.",
+        "Application received. Proceed to the identity scan to continue your Freelance ID application.",
         "",
-        "This is a portfolio demo, not real KYC or government identity verification.",
+        "This workflow is not real KYC or government identity verification.",
       ].join("\n"),
     });
   }
@@ -60,15 +60,15 @@ export class NotificationService {
   }): Promise<void> {
     await this.emailTransport.send({
       to: input.to,
-      subject: "Freelance ID demo application update",
+      subject: "Freelance ID application update",
       text: [
         `Hello ${input.legalName},`,
         "",
-        "Your Freelance ID demo application was rejected after admin review.",
+        "Your Freelance ID application was rejected after admin review.",
         `Reason: ${input.rejectionReason}`,
         `You may reapply after ${input.reapplyCooldownUntil.toISOString().slice(0, 10)}.`,
         "",
-        "This is a portfolio demo, not real KYC or government identity verification.",
+        "This workflow is not real KYC or government identity verification.",
       ].join("\n"),
     });
   }
@@ -82,17 +82,17 @@ export class NotificationService {
   }): Promise<void> {
     await this.emailTransport.send({
       to: input.to,
-      subject: "Freelance ID demo approved",
+      subject: "Freelance ID approved",
       text: [
         `Hello ${input.legalName},`,
         "",
-        "Your Freelance ID demo application was approved.",
+        "Your Freelance ID application was approved.",
         `Freelance ID: ${input.freelanceIdCode}`,
         `Serial: ${input.serialNumber}`,
         `Download your card: ${input.cardUrl}`,
         "",
         "The card link expires in 48 hours and requires your date of birth.",
-        "This is a portfolio demo, not real KYC or government identity verification.",
+        "This workflow is not real KYC or government identity verification.",
       ].join("\n"),
     });
   }

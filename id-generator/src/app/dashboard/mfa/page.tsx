@@ -5,7 +5,7 @@ import { getAdminMfaRouteState } from "@/lib/auth/admin-session";
 import { MfaForm } from "./MfaForm";
 
 export const metadata: Metadata = {
-  title: "Admin MFA | Freelance ID Demo",
+  title: "Admin MFA | Freelance ID",
 };
 
 export default async function DashboardMfaPage() {

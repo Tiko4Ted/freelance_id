@@ -13,7 +13,7 @@ import { NotificationService } from "@/lib/services/notification-service";
 import type { ValidatedApplicationForm } from "@/lib/validation/application-form";
 
 describe("NotificationService", () => {
-  it("sends the confirmation email through a dev SMTP catcher with the demo disclaimer", async () => {
+  it("sends the confirmation email through a dev SMTP catcher with the verification disclaimer", async () => {
     const receivedMessages: string[] = [];
     const server = new SMTPServer({
       authOptional: true,
@@ -45,7 +45,7 @@ describe("NotificationService", () => {
         new SmtpEmailTransport({
           host: "127.0.0.1",
           port: address.port,
-          fromAddress: "Freelance ID Demo <no-reply@example.com>",
+          fromAddress: "Freelance ID <no-reply@example.com>",
         }),
       ).subscribeTo(eventBus);
 
@@ -63,7 +63,7 @@ describe("NotificationService", () => {
         "Application received. Proceed to the identity scan",
       );
       expect(normalizedMessage).toContain(
-        "This is a portfolio demo, not real KYC or government identity verification.",
+        "This workflow is not real KYC or government identity verification.",
       );
     } finally {
       await new Promise<void>((resolve) => {
@@ -92,7 +92,7 @@ describe("NotificationService", () => {
 
     expect(transport.messages[0]).toMatchObject({
       to: "mary@example.com",
-      subject: "Freelance ID demo approved",
+      subject: "Freelance ID approved",
     });
     expect(transport.messages[0].text).toContain(
       "Freelance ID: FL-MARY-SMITH-000001",

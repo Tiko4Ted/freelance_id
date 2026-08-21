@@ -30,5 +30,5 @@ export const scanFailureMessages: Record<ScanFailureReason, string> = {
   low_light: "Lighting is too low. Try a brighter location.",
   blurry: "Image is unclear. Hold still and try again.",
   multiple_faces: "Only one face should be visible in the frame.",
-  demo_retry: "Scan quality confirmed. Please complete one more scan for this demo path.",
+  demo_retry: "Scan quality confirmed. Please complete one more scan to continue.",
 };

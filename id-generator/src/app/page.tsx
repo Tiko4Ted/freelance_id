@@ -8,7 +8,7 @@ export default function Home() {
           </h1>
           <p className="max-w-2xl text-base leading-7 text-neutral-300">
             Standalone intake, scan-quality review, admin approval, and card
-            issuance workflow for demonstration purposes only.
+            issuance workflow for portfolio evaluation only.
           </p>
         </div>
 

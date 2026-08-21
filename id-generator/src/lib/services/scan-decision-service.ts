@@ -242,7 +242,7 @@ export class DemoModeDecision extends BaseScanDecision {
       attemptNumber: input.attemptNumber,
       detectionResult: ScanResult.PASS,
       confidenceScore: input.confidenceScore,
-      message: "Scan passed. Your demo freelance identity has been approved.",
+      message: "Scan passed. Your freelance identity has been approved.",
     };
   }
 }

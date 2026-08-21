@@ -101,7 +101,7 @@ export function createSelfieRetentionPurgeService(): SelfieRetentionPurgeService
 
 function createEmailTransport(): EmailTransport {
   const fromAddress =
-    process.env.EMAIL_FROM ?? "Freelance ID Demo <no-reply@example.com>";
+    process.env.EMAIL_FROM ?? "Freelance ID <no-reply@example.com>";
 
   if (process.env.SMTP_HOST && process.env.SMTP_PORT) {
     return new SmtpEmailTransport({

@@ -9,7 +9,7 @@ import {
 } from "@/app/apply/form-state";
 
 const consentCopy =
-  "I consent to submission of my details for this identity verification demo. I understand this is a demo, not real KYC or government identity verification.";
+  "I consent to submission of my details for this identity verification workflow. I understand this is not real KYC or government identity verification.";
 
 export function ApplyForm() {
   const [state, formAction] = useFormState(
