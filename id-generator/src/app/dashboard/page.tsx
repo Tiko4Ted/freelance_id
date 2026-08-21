@@ -24,8 +24,8 @@ export default async function DashboardPage({
 
   return (
     <DashboardChrome>
-      <section className="mx-auto max-w-7xl space-y-6">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+      <section className="mx-auto w-full max-w-7xl h-full flex flex-col gap-6 p-6">
+        <div className="shrink-0 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div className="space-y-2">
             <p className="text-sm font-medium uppercase tracking-wide text-cyan-300">
               Applications
@@ -47,9 +47,9 @@ export default async function DashboardPage({
           </nav>
         </div>
 
-        <div className="overflow-hidden rounded-lg border border-neutral-800">
+        <div className="flex-1 overflow-y-auto rounded-lg border border-neutral-800 bg-neutral-900 shadow-inner">
           <table className="w-full border-collapse text-left text-sm">
-            <thead className="bg-neutral-900 text-neutral-300">
+            <thead className="bg-neutral-900 text-neutral-300 sticky top-0 z-10 shadow-[0_1px_0_0_rgba(255,255,255,0.1)]">
               <tr>
                 <th className="px-4 py-3 font-medium">Applicant</th>
                 <th className="px-4 py-3 font-medium">Status</th>

@@ -19,6 +19,12 @@ body {
   background: var(--background);
 }
 
+html, body {
+  height: 100dvh;
+  width: 100vw;
+  overflow: hidden;
+}
+
 @layer utilities {
   .text-balance {
     text-wrap: balance;

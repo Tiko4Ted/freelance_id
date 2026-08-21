@@ -8,8 +8,8 @@ export function DashboardChrome({
   children: React.ReactNode;
 }>) {
   return (
-    <main className="min-h-screen bg-neutral-950 text-neutral-50">
-      <header className="border-b border-neutral-800 px-6 py-4">
+    <main className="h-[100dvh] w-[100vw] overflow-hidden flex flex-col bg-neutral-950 text-neutral-50">
+      <header className="shrink-0 border-b border-neutral-800 px-6 py-4">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-4">
           <Link className="text-sm font-semibold text-neutral-50" href="/dashboard">
             Freelance ID Admin
@@ -24,7 +24,7 @@ export function DashboardChrome({
           </form>
         </div>
       </header>
-      <div className="px-6 py-6">{children}</div>
+      <div className="flex-1 overflow-hidden w-full flex flex-col">{children}</div>
     </main>
   );
 }

@@ -28,13 +28,15 @@ export default async function DashboardDetailPage({
 
   return (
     <DashboardChrome>
-      <section className="mx-auto max-w-7xl space-y-6">
-        <Link className="text-sm text-cyan-200 hover:text-cyan-100" href="/dashboard">
-          Back to applications
-        </Link>
+      <section className="mx-auto w-full max-w-7xl h-full flex flex-col gap-6 p-4 sm:p-6">
+        <div className="shrink-0">
+          <Link className="inline-block text-sm text-cyan-200 hover:text-cyan-100" href="/dashboard">
+            &larr; Back to applications
+          </Link>
+        </div>
 
-        <div className="grid gap-6 lg:grid-cols-[0.9fr_1.1fr]">
-          <section className="space-y-4">
+        <div className="flex-1 overflow-y-auto w-full grid gap-6 lg:grid-cols-[0.9fr_1.1fr] pb-10 content-start">
+          <section className="space-y-4 shrink-0">
             <div className="rounded-lg border border-neutral-800 bg-neutral-900 p-5">
               <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                 <div>
