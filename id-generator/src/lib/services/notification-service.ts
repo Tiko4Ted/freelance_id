@@ -46,8 +46,6 @@ export class NotificationService {
         `Hello ${input.legalName},`,
         "",
         "Application received. Proceed to the identity scan to continue your Freelance ID application.",
-        "",
-        "This workflow is not real KYC or government identity verification.",
       ].join("\n"),
     });
   }
@@ -67,8 +65,6 @@ export class NotificationService {
         "Your Freelance ID application was rejected after admin review.",
         `Reason: ${input.rejectionReason}`,
         `You may reapply after ${input.reapplyCooldownUntil.toISOString().slice(0, 10)}.`,
-        "",
-        "This workflow is not real KYC or government identity verification.",
       ].join("\n"),
     });
   }
@@ -92,7 +88,6 @@ export class NotificationService {
         `Download your card: ${input.cardUrl}`,
         "",
         "The card link expires in 48 hours and requires your date of birth.",
-        "This workflow is not real KYC or government identity verification.",
       ].join("\n"),
     });
   }

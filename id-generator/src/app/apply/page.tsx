@@ -18,9 +18,7 @@ export default function ApplyPage() {
             Start your Freelance ID application
           </h1>
           <p className="max-w-xl text-base leading-7 text-neutral-300">
-            Submit basic contact details before the scan-quality step. This
-            flow does not collect government identifiers and does not perform
-            real KYC.
+            Submit basic contact details before the scan-quality step.
           </p>
         </div>
 
