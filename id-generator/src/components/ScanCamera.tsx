@@ -196,6 +196,17 @@ export function ScanCamera({ applicationId }: { applicationId: string }) {
         />
         <FaceGuide ready={readyForCapture} />
         {showProgress ? <ScanProgress /> : null}
+        
+        {/* Success Overlay */}
+        {decision && decision.status !== "retry" ? (
+          <div className="absolute inset-0 z-20 flex items-center justify-center bg-black/60 backdrop-blur-sm transition-opacity">
+            <div className="flex h-32 w-32 items-center justify-center rounded-full bg-emerald-500/20 text-emerald-400 shadow-[0_0_60px_rgba(16,185,129,0.4)] border border-emerald-500/30">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="h-16 w-16">
+                <path strokeLinecap="round" strokeLinejoin="round" d="m4.5 12.75 6 6 9-13.5" />
+              </svg>
+            </div>
+          </div>
+        ) : null}
       </div>
 
       <div className="grid gap-3 rounded-lg border border-neutral-800 bg-neutral-900 p-4">

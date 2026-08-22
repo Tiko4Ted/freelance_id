@@ -28,20 +28,28 @@ export default function Home() {
 
         {/* Description */}
         <p className="max-w-2xl text-[clamp(0.9rem,2.5vw,1.15rem)] text-neutral-300 mb-[5vh] leading-relaxed shrink-0 px-4">
-          Your Freelance ID is more than just a digital badge—it&apos;s your verified passport to the gig economy. 
-          Use it to secure high-paying clients and seamlessly access exclusive platforms.
+          For just <strong className="text-white font-semibold">$20</strong>, secure a verified passport to the gig economy. 
+          Use your Freelance ID to unlock high-paying clients and seamlessly access exclusive platforms worldwide.
         </p>
 
         {/* Call to Action */}
-        <Link 
-          href="/apply"
-          className="group relative inline-flex items-center justify-center gap-3 px-6 sm:px-8 py-3 sm:py-4 bg-white text-black rounded-full text-[clamp(1rem,2vw,1.125rem)] font-bold transition-all hover:bg-neutral-200 hover:scale-[1.02] active:scale-[0.98] shadow-[0_0_40px_rgba(255,255,255,0.1)] hover:shadow-[0_0_60px_rgba(6,182,212,0.3)] shrink-0"
-        >
-          Create Your Freelance ID
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-5 h-5 group-hover:translate-x-1 transition-transform">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" />
-          </svg>
-        </Link>
+        <div className="flex flex-col items-center gap-4 shrink-0">
+          <Link 
+            href="/apply"
+            className="group relative inline-flex items-center justify-center gap-3 px-6 sm:px-8 py-3 sm:py-4 bg-white text-black rounded-full text-[clamp(1rem,2vw,1.125rem)] font-bold transition-all hover:bg-neutral-200 hover:scale-[1.02] active:scale-[0.98] shadow-[0_0_40px_rgba(255,255,255,0.1)] hover:shadow-[0_0_60px_rgba(6,182,212,0.3)]"
+          >
+            Get Your Freelance ID – $20
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-5 h-5 group-hover:translate-x-1 transition-transform">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" />
+            </svg>
+          </Link>
+          <div className="flex items-center gap-2 text-sm text-neutral-400">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 text-emerald-400">
+              <path fillRule="evenodd" d="M16.403 12.652a3 3 0 0 0 0-5.304 3 3 0 0 0-3.75-3.751 3 3 0 0 0-5.305 0 3 3 0 0 0-3.751 3.75 3 3 0 0 0 0 5.305 3 3 0 0 0 3.75 3.751 3 3 0 0 0 5.305 0 3 3 0 0 0 3.751-3.75Zm-2.546-4.46a.75.75 0 0 0-1.214-.883l-3.483 4.79-1.88-1.88a.75.75 0 1 0-1.06 1.061l2.5 2.5a.75.75 0 0 0 1.137-.089l4-5.5Z" clipRule="evenodd" />
+            </svg>
+            <span>One-time payment. Lifetime professional credibility.</span>
+          </div>
+        </div>
 
         {/* Feature Highlights - hidden on very small vertical screens or narrow devices */}
         <div className="mt-[6vh] hidden md:grid grid-cols-3 gap-6 w-full text-left shrink-0">
