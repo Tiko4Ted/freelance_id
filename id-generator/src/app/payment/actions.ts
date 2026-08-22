@@ -1,13 +1,11 @@
 "use server";
 
 import { ApplicationStatus } from "@/generated/prisma/client";
-import { getPrismaClient } from "@/lib/db";
+import { prisma } from "@/lib/db";
 
 export async function processPaymentAction(applicationId: string) {
-  const db = await getPrismaClient();
-  
   try {
-    const app = await db.freelanceIdApplication.findUnique({
+    const app = await prisma.freelanceIdApplication.findUnique({
       where: { id: applicationId },
     });
 
@@ -20,7 +18,7 @@ export async function processPaymentAction(applicationId: string) {
        return { success: true };
     }
 
-    await db.freelanceIdApplication.update({
+    await prisma.freelanceIdApplication.update({
       where: { id: applicationId },
       data: { status: ApplicationStatus.PROCESSING },
     });

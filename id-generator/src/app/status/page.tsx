@@ -1,4 +1,4 @@
-import { getPrismaClient } from "@/lib/db";
+import { prisma } from "@/lib/db";
 import Link from "next/link";
 import { ApplicationStatus } from "@/generated/prisma/client";
 
@@ -19,8 +19,7 @@ export default async function StatusPage({
     );
   }
 
-  const db = await getPrismaClient();
-  const application = await db.freelanceIdApplication.findUnique({
+  const application = await prisma.freelanceIdApplication.findUnique({
     where: { id: applicationId },
   });
 
@@ -83,7 +82,7 @@ export default async function StatusPage({
               </div>
               <h1 className="text-3xl font-extrabold tracking-tight mb-3">Processing...</h1>
               <p className="text-neutral-400 text-sm mb-4 leading-relaxed">
-                We've received your payment! Your Freelance ID is currently being generated. You will receive an email once it is ready.
+                Payment received. Your Freelance ID is currently being generated. You will receive an email once it is ready.
               </p>
             </>
           )}

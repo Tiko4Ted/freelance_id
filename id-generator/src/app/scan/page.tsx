@@ -1,5 +1,5 @@
 import { ScanCamera } from "@/components/ScanCamera";
-import { getPrismaClient } from "@/lib/db";
+import { prisma } from "@/lib/db";
 import { ApplicationStatus, ScanResult } from "@/generated/prisma/client";
 import { redirect } from "next/navigation";
 
@@ -11,8 +11,7 @@ export default async function ScanPage({
   const applicationId = searchParams.applicationId;
 
   if (applicationId) {
-    const db = await getPrismaClient();
-    const application = await db.freelanceIdApplication.findUnique({
+    const application = await prisma.freelanceIdApplication.findUnique({
       where: { id: applicationId },
       include: { scanAttempts: true },
     });

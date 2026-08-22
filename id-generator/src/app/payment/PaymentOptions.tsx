@@ -20,7 +20,7 @@ export function PaymentOptions({ applicationId }: { applicationId: string }) {
       } else {
         throw new Error(res.error || "Payment failed");
       }
-    } catch (e) {
+    } catch {
       setError("Payment processing failed. Please try again.");
       setLoading(null);
     }
