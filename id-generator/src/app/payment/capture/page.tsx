@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
-import { useSearchParams, useRouter, Suspense } from "next/navigation";
+import { Suspense, useEffect, useRef, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { capturePaypalPaymentAction } from "../actions";
 
 function CaptureLogic() {
@@ -32,8 +32,8 @@ function CaptureLogic() {
         } else {
           setError(res.error || "Failed to capture payment.");
         }
-      } catch (e: any) {
-        setError(e.message || "An unexpected error occurred.");
+      } catch (error) {
+        setError(getErrorMessage(error) || "An unexpected error occurred.");
       }
     }
 
@@ -76,6 +76,10 @@ function CaptureLogic() {
       </p>
     </>
   );
+}
+
+function getErrorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : "";
 }
 
 export default function PaypalCapturePage() {

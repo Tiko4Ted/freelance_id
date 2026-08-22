@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { initiateMpesaPaymentAction, processPaymentAction } from "./actions";
+import { initiateMpesaPaymentAction } from "./actions";
 
 export function PaymentOptions({ applicationId }: { applicationId: string }) {
   const [loading, setLoading] = useState<"mpesa" | "paypal" | null>(null);
@@ -25,8 +25,8 @@ export function PaymentOptions({ applicationId }: { applicationId: string }) {
       } else {
         throw new Error(res.error || "M-Pesa payment failed");
       }
-    } catch (e: any) {
-      setError(e.message || "Payment processing failed. Please try again.");
+    } catch (error) {
+      setError(getErrorMessage(error) || "Payment processing failed. Please try again.");
       setLoading(null);
     }
   }
@@ -42,8 +42,8 @@ export function PaymentOptions({ applicationId }: { applicationId: string }) {
       } else {
         throw new Error(res.error || "Failed to initiate PayPal payment");
       }
-    } catch (e: any) {
-      setError(e.message || "Payment processing failed. Please try again.");
+    } catch (error) {
+      setError(getErrorMessage(error) || "Payment processing failed. Please try again.");
       setLoading(null);
     }
   }
@@ -127,4 +127,8 @@ export function PaymentOptions({ applicationId }: { applicationId: string }) {
       )}
     </div>
   );
+}
+
+function getErrorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : "";
 }

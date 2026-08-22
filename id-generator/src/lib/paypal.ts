@@ -1,3 +1,19 @@
+type PaypalTokenResponse = {
+  access_token: string;
+};
+
+type PaypalOrderResponse = {
+  id: string;
+  links: Array<{
+    href: string;
+    rel: string;
+  }>;
+};
+
+type PaypalCaptureResponse = {
+  status: string;
+};
+
 export async function getPaypalToken(): Promise<string> {
   const clientId = process.env.PAYPAL_CLIENT_ID;
   const clientSecret = process.env.PAYPAL_CLIENT_SECRET;
@@ -30,11 +46,14 @@ export async function getPaypalToken(): Promise<string> {
     throw new Error(`PayPal Auth failed: ${response.statusText}`);
   }
 
-  const data = await response.json();
+  const data = (await response.json()) as PaypalTokenResponse;
   return data.access_token;
 }
 
-export async function createPaypalOrder(amount: number, returnUrl: string, cancelUrl: string) {
+export async function createPaypalOrder(amount: number, returnUrl: string, cancelUrl: string): Promise<{
+  approveLink?: string;
+  orderId: string;
+}> {
   const token = await getPaypalToken();
   const environment = process.env.PAYPAL_ENVIRONMENT || "sandbox";
 
@@ -74,13 +93,13 @@ export async function createPaypalOrder(amount: number, returnUrl: string, cance
     throw new Error("Failed to create PayPal order");
   }
 
-  const order = await response.json();
-  const approveLink = order.links.find((link: any) => link.rel === "approve")?.href;
+  const order = (await response.json()) as PaypalOrderResponse;
+  const approveLink = order.links.find((link) => link.rel === "approve")?.href;
 
   return { orderId: order.id, approveLink };
 }
 
-export async function capturePaypalOrder(orderId: string) {
+export async function capturePaypalOrder(orderId: string): Promise<PaypalCaptureResponse> {
   const token = await getPaypalToken();
   const environment = process.env.PAYPAL_ENVIRONMENT || "sandbox";
 
@@ -103,5 +122,5 @@ export async function capturePaypalOrder(orderId: string) {
     throw new Error("Failed to capture PayPal order");
   }
 
-  return response.json();
+  return (await response.json()) as PaypalCaptureResponse;
 }

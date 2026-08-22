@@ -73,9 +73,9 @@ export async function initiateMpesaPaymentAction(applicationId: string, phoneNum
        return { success: false, error: response.CustomerMessage || "Failed to initiate M-Pesa push." };
     }
 
-  } catch (error: any) {
+  } catch (error) {
     console.error("M-Pesa init error:", error);
-    return { success: false, error: error.message || "Failed to connect to M-Pesa. Please verify your environment variables." };
+    return { success: false, error: getErrorMessage(error) || "Failed to connect to M-Pesa. Please verify your environment variables." };
   }
 }
 
@@ -118,9 +118,9 @@ export async function initiatePaypalPaymentAction(applicationId: string) {
        return { success: false, error: "Failed to initiate PayPal order." };
     }
 
-  } catch (error: any) {
+  } catch (error) {
     console.error("PayPal init error:", error);
-    return { success: false, error: error.message || "Failed to connect to PayPal. Please verify your environment variables." };
+    return { success: false, error: getErrorMessage(error) || "Failed to connect to PayPal. Please verify your environment variables." };
   }
 }
 
@@ -165,8 +165,12 @@ export async function capturePaypalPaymentAction(orderId: string, applicationId:
        return { success: false, error: "Payment was not completed." };
     }
 
-  } catch (error: any) {
+  } catch (error) {
     console.error("PayPal capture error:", error);
-    return { success: false, error: error.message || "Failed to capture payment." };
+    return { success: false, error: getErrorMessage(error) || "Failed to capture payment." };
   }
+}
+
+function getErrorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : "";
 }

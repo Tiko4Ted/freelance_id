@@ -77,7 +77,7 @@ export default async function StatusPage({
               </div>
               <h1 className="text-3xl font-extrabold tracking-tight mb-3">Check Your Phone</h1>
               <p className="text-neutral-400 text-sm mb-4 leading-relaxed">
-                We've sent an M-Pesa prompt to your phone. Please enter your PIN to complete the $20 payment.
+                We sent an M-Pesa prompt to your phone. Please enter your PIN to complete the $20 payment.
               </p>
               <p className="text-[#4CAF50] text-xs font-semibold animate-pulse">Waiting for Safaricom confirmation...</p>
             </>
