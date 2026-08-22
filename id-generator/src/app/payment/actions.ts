@@ -78,3 +78,95 @@ export async function initiateMpesaPaymentAction(applicationId: string, phoneNum
     return { success: false, error: error.message || "Failed to connect to M-Pesa. Please verify your environment variables." };
   }
 }
+
+export async function initiatePaypalPaymentAction(applicationId: string) {
+  const db = prisma;
+  
+  try {
+    const app = await db.freelanceIdApplication.findUnique({
+      where: { id: applicationId },
+    });
+
+    if (!app) {
+      return { success: false, error: "Application not found." };
+    }
+
+    if (app.status !== ApplicationStatus.PENDING) {
+      return { success: false, error: "Application is not awaiting payment." };
+    }
+
+    const { createPaypalOrder } = await import("@/lib/paypal");
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+    
+    // Create the order via PayPal REST API
+    const returnUrl = `${appUrl}/payment/capture?applicationId=${applicationId}`;
+    const cancelUrl = `${appUrl}/payment?applicationId=${applicationId}`;
+    
+    const { orderId, approveLink } = await createPaypalOrder(20, returnUrl, cancelUrl);
+
+    if (orderId) {
+       await db.paypalTransaction.create({
+         data: {
+           applicationId: app.id,
+           orderId: orderId,
+           amount: 20
+         }
+       });
+
+       return { success: true, approveLink };
+    } else {
+       return { success: false, error: "Failed to initiate PayPal order." };
+    }
+
+  } catch (error: any) {
+    console.error("PayPal init error:", error);
+    return { success: false, error: error.message || "Failed to connect to PayPal. Please verify your environment variables." };
+  }
+}
+
+export async function capturePaypalPaymentAction(orderId: string, applicationId: string) {
+  const db = prisma;
+  
+  try {
+    const paypalTx = await db.paypalTransaction.findUnique({
+      where: { orderId },
+    });
+
+    if (!paypalTx) {
+      return { success: false, error: "Transaction not found." };
+    }
+
+    if (paypalTx.applicationId !== applicationId) {
+      return { success: false, error: "Transaction mismatch." };
+    }
+
+    const { capturePaypalOrder } = await import("@/lib/paypal");
+    const captureResult = await capturePaypalOrder(orderId);
+
+    if (captureResult.status === "COMPLETED") {
+       await db.$transaction(async (tx) => {
+         await tx.paypalTransaction.update({
+           where: { id: paypalTx.id },
+           data: { status: "COMPLETED" }
+         });
+
+         await tx.freelanceIdApplication.update({
+           where: { id: applicationId },
+           data: { status: ApplicationStatus.PROCESSING },
+         });
+       });
+
+       return { success: true };
+    } else {
+       await db.paypalTransaction.update({
+         where: { id: paypalTx.id },
+         data: { status: "FAILED" }
+       });
+       return { success: false, error: "Payment was not completed." };
+    }
+
+  } catch (error: any) {
+    console.error("PayPal capture error:", error);
+    return { success: false, error: error.message || "Failed to capture payment." };
+  }
+}

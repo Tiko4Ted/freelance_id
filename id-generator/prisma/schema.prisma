@@ -37,6 +37,7 @@ model FreelanceIdApplication {
   auditLogs                AuditLog[]
   syncAttempts             SyncAttempt[]
   mpesaTransactions        MpesaTransaction[]
+  paypalTransactions       PaypalTransaction[]
 
   @@index([normalizedLegalName, dateOfBirth])
   @@index([status])
@@ -158,4 +159,17 @@ model MpesaTransaction {
 
   application       FreelanceIdApplication @relation(fields: [applicationId], references: [id])
   @@map("mpesa_transactions")
+}
+
+model PaypalTransaction {
+  id                String   @id @default(uuid()) @db.Uuid
+  applicationId     String   @map("application_id") @db.Uuid
+  orderId           String   @unique @map("order_id")
+  status            String   @default("CREATED") // CREATED, COMPLETED, FAILED
+  amount            Float?
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+
+  application       FreelanceIdApplication @relation(fields: [applicationId], references: [id])
+  @@map("paypal_transactions")
 }

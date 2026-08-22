@@ -35,17 +35,15 @@ export function PaymentOptions({ applicationId }: { applicationId: string }) {
     setLoading("paypal");
     setError(null);
     try {
-      // Simulate payment delay for paypal
-      await new Promise((resolve) => setTimeout(resolve, 2000));
-      
-      const res = await processPaymentAction(applicationId);
-      if (res.success) {
-        window.location.href = `/status?applicationId=${applicationId}`;
+      const { initiatePaypalPaymentAction } = await import("./actions");
+      const res = await initiatePaypalPaymentAction(applicationId);
+      if (res.success && res.approveLink) {
+        window.location.href = res.approveLink;
       } else {
-        throw new Error(res.error || "Payment failed");
+        throw new Error(res.error || "Failed to initiate PayPal payment");
       }
     } catch (e: any) {
-      setError("Payment processing failed. Please try again.");
+      setError(e.message || "Payment processing failed. Please try again.");
       setLoading(null);
     }
   }
