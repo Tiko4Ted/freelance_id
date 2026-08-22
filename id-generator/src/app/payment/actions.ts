@@ -29,3 +29,52 @@ export async function processPaymentAction(applicationId: string) {
     return { success: false, error: "Failed to process payment." };
   }
 }
+
+export async function initiateMpesaPaymentAction(applicationId: string, phoneNumber: string) {
+  const db = prisma;
+  
+  try {
+    const app = await db.freelanceIdApplication.findUnique({
+      where: { id: applicationId },
+    });
+
+    if (!app) {
+      return { success: false, error: "Application not found." };
+    }
+
+    if (app.status !== ApplicationStatus.PENDING) {
+      return { success: false, error: "Application is not awaiting payment." };
+    }
+
+    // Amount should be the equivalent of $20 in KES if doing currency conversion, 
+    // but we use 1 for testing or whatever amount is configured for this paybill.
+    // Assuming 20 for now.
+    const { triggerStkPush } = await import("@/lib/mpesa");
+    const response = await triggerStkPush(
+      phoneNumber,
+      20,
+      app.id, // AccountReference
+      "Freelance ID Payment"
+    );
+
+    if (response.ResponseCode === "0") {
+       await db.mpesaTransaction.create({
+         data: {
+           applicationId: app.id,
+           checkoutRequestId: response.CheckoutRequestID,
+           merchantRequestId: response.MerchantRequestID,
+           phoneNumber: phoneNumber,
+           amount: 20
+         }
+       });
+
+       return { success: true };
+    } else {
+       return { success: false, error: response.CustomerMessage || "Failed to initiate M-Pesa push." };
+    }
+
+  } catch (error: any) {
+    console.error("M-Pesa init error:", error);
+    return { success: false, error: error.message || "Failed to connect to M-Pesa. Please verify your environment variables." };
+  }
+}

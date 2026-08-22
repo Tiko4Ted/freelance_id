@@ -36,6 +36,7 @@ model FreelanceIdApplication {
   scanAttempts             ScanAttempt[]
   auditLogs                AuditLog[]
   syncAttempts             SyncAttempt[]
+  mpesaTransactions        MpesaTransaction[]
 
   @@index([normalizedLegalName, dateOfBirth])
   @@index([status])
@@ -141,4 +142,20 @@ enum ScanResult {
   FAIL_LOW_LIGHT
   FAIL_BLURRY
   FAIL_MULTIPLE_FACES
+}
+
+model MpesaTransaction {
+  id                String   @id @default(uuid()) @db.Uuid
+  applicationId     String   @map("application_id") @db.Uuid
+  checkoutRequestId String   @unique @map("checkout_request_id")
+  merchantRequestId String?  @map("merchant_request_id")
+  status            String   @default("PENDING")
+  amount            Float?
+  receiptNumber     String?  @map("receipt_number")
+  phoneNumber       String?  @map("phone_number")
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+
+  application       FreelanceIdApplication @relation(fields: [applicationId], references: [id])
+  @@map("mpesa_transactions")
 }
