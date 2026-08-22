@@ -156,6 +156,13 @@ export async function capturePaypalPaymentAction(orderId: string, applicationId:
          });
        });
 
+       const { createAutoGenerationService } = await import("@/lib/application-container");
+       createAutoGenerationService()
+         .generateAndApproveApplication(applicationId)
+         .catch((err) => {
+           console.error("Auto generation failed after PayPal capture:", err);
+         });
+
        return { success: true };
     } else {
        await db.paypalTransaction.update({

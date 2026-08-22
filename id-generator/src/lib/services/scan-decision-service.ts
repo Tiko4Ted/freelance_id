@@ -233,7 +233,7 @@ export class DemoModeDecision extends BaseScanDecision {
 
     await this.repository.updateApplicationDecision({
       applicationId: input.applicationId,
-      status: ApplicationStatus.APPROVED,
+      status: ApplicationStatus.PENDING,
       finalDecisionSource: DecisionSource.AUTO,
     });
 

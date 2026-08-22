@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { ApplicationStatus } from "@/generated/prisma/client";
+import { createAutoGenerationService } from "@/lib/application-container";
 
 export async function POST(request: Request) {
   try {
@@ -39,6 +40,15 @@ export async function POST(request: Request) {
           data: { status: ApplicationStatus.PROCESSING },
         });
       });
+
+      // Automatically generate the ID card in the background
+      // We don't await this so the webhook responds to Safaricom quickly, but we catch errors
+      createAutoGenerationService()
+        .generateAndApproveApplication(mpesaTx.applicationId)
+        .catch((err) => {
+          console.error("Auto generation failed after M-Pesa payment:", err);
+        });
+
     } else {
       // Payment failed, cancelled, or timed out
       await prisma.mpesaTransaction.update({

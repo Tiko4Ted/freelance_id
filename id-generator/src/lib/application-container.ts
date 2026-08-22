@@ -44,6 +44,8 @@ export function createApplicationService(): ApplicationService {
   );
 }
 
+import { AutoGenerationService } from "@/lib/services/auto-generation-service";
+
 export function createAdminReviewService(): AdminReviewService {
   const repository = new PrismaAdminReviewRepository(prisma);
 
@@ -54,6 +56,15 @@ export function createAdminReviewService(): AdminReviewService {
     createNotificationEventBus(),
     new AuditService(repository),
     createCardService(),
+  );
+}
+
+export function createAutoGenerationService(): AutoGenerationService {
+  return new AutoGenerationService(
+    new IdGenerationService(new PrismaIdSequenceRepository(prisma)),
+    createCardService(),
+    createNotificationEventBus(),
+    new SyncService(),
   );
 }
 
