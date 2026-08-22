@@ -124,6 +124,7 @@ model SyncAttempt {
 
 enum ApplicationStatus {
   PENDING
+  PROCESSING
   APPROVED
   REJECTED
 }

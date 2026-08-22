@@ -1,11 +1,40 @@
 import { ScanCamera } from "@/components/ScanCamera";
+import { getPrismaClient } from "@/lib/db";
+import { ApplicationStatus, ScanResult } from "@/generated/prisma/client";
+import { redirect } from "next/navigation";
 
-export default function ScanPage({
+export default async function ScanPage({
   searchParams,
 }: {
   searchParams: { applicationId?: string };
 }) {
   const applicationId = searchParams.applicationId;
+
+  if (applicationId) {
+    const db = await getPrismaClient();
+    const application = await db.freelanceIdApplication.findUnique({
+      where: { id: applicationId },
+      include: { scanAttempts: true },
+    });
+
+    if (application) {
+      if (
+        application.status === ApplicationStatus.PROCESSING ||
+        application.status === ApplicationStatus.APPROVED ||
+        application.status === ApplicationStatus.REJECTED
+      ) {
+        redirect(`/status?applicationId=${applicationId}`);
+      }
+
+      const hasPassingScan = application.scanAttempts.some(
+        (attempt) => attempt.detectionResult === ScanResult.PASS
+      );
+
+      if (hasPassingScan && application.status === ApplicationStatus.PENDING) {
+        redirect(`/payment?applicationId=${applicationId}`);
+      }
+    }
+  }
 
   return (
     <main className="h-[100dvh] w-[100vw] bg-[#050505] text-neutral-50 selection:bg-cyan-500/30 overflow-hidden relative font-sans flex items-center justify-center">

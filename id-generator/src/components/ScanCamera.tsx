@@ -83,6 +83,12 @@ export function ScanCamera({ applicationId }: { applicationId: string }) {
 
       setDecision(result);
       setScanLocked(result.status !== "retry");
+
+      if (result.status !== "retry") {
+        setTimeout(() => {
+          window.location.href = `/payment?applicationId=${applicationId}`;
+        }, 2500);
+      }
     } catch {
       setStatusText("Scan submission failed. Try again.");
     } finally {

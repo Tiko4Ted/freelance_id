@@ -29,9 +29,36 @@ export class ApplicationService {
     input: ValidatedApplicationForm,
     now = new Date(),
   ): Promise<SubmitApplicationResult> {
-    const cooldownBlock = await this.findActiveCooldown(input, now);
-    if (cooldownBlock) {
-      return { status: "blocked", message: cooldownBlock };
+    const priorApplications =
+      await this.applicationRepository.findByApplicantIdentity({
+        normalizedLegalName: input.normalizedLegalName,
+        dateOfBirth: input.dateOfBirth,
+      });
+
+    const activeRejection = priorApplications.find((application) => {
+      if (
+        application.status !== ApplicationStatus.REJECTED ||
+        application.adminOverrideCooldown ||
+        !application.reapplyCooldownUntil
+      ) {
+        return false;
+      }
+      return application.reapplyCooldownUntil.getTime() > now.getTime();
+    });
+
+    if (activeRejection) {
+      return { 
+        status: "blocked", 
+        message: `A prior application was rejected within the last ${REAPPLY_COOLDOWN_DAYS} days. Please wait until the cooldown expires or contact an administrator for review.` 
+      };
+    }
+
+    const existingPending = priorApplications.find(
+      (app) => app.status === ApplicationStatus.PENDING
+    );
+
+    if (existingPending) {
+      return { status: "created", applicationId: existingPending.id };
     }
 
     const application = await this.applicationRepository.create({
