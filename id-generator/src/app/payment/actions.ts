@@ -2,6 +2,7 @@
 
 import { ApplicationStatus } from "@/generated/prisma/client";
 import { prisma } from "@/lib/db";
+import { PAYMENT_AMOUNT_USD } from "@/lib/payment/constants";
 
 export async function processPaymentAction(applicationId: string) {
   try {
@@ -46,13 +47,11 @@ export async function initiateMpesaPaymentAction(applicationId: string, phoneNum
       return { success: false, error: "Application is not awaiting payment." };
     }
 
-    // Amount should be the equivalent of $20 in KES if doing currency conversion, 
-    // but we use 1 for testing or whatever amount is configured for this paybill.
-    // Assuming 20 for now.
+    // The configured paybill amount follows the current application price.
     const { triggerStkPush } = await import("@/lib/mpesa");
     const response = await triggerStkPush(
       phoneNumber,
-      20,
+      PAYMENT_AMOUNT_USD,
       app.id, // AccountReference
       "Freelance ID Payment"
     );
@@ -64,7 +63,7 @@ export async function initiateMpesaPaymentAction(applicationId: string, phoneNum
            checkoutRequestId: response.CheckoutRequestID,
            merchantRequestId: response.MerchantRequestID,
            phoneNumber: phoneNumber,
-           amount: 20
+            amount: PAYMENT_AMOUNT_USD
          }
        });
 
@@ -102,14 +101,18 @@ export async function initiatePaypalPaymentAction(applicationId: string) {
     const returnUrl = `${appUrl}/payment/capture?applicationId=${applicationId}`;
     const cancelUrl = `${appUrl}/payment?applicationId=${applicationId}`;
     
-    const { orderId, approveLink } = await createPaypalOrder(20, returnUrl, cancelUrl);
+    const { orderId, approveLink } = await createPaypalOrder(
+      PAYMENT_AMOUNT_USD,
+      returnUrl,
+      cancelUrl,
+    );
 
     if (orderId) {
        await db.paypalTransaction.create({
          data: {
            applicationId: app.id,
            orderId: orderId,
-           amount: 20
+            amount: PAYMENT_AMOUNT_USD
          }
        });
 

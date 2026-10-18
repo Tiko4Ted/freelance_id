@@ -10,6 +10,9 @@ import {
 import {
   captureThumbnailDataUrl,
   detectVideoFrame,
+  FACE_GUIDE_ASPECT_RATIO,
+  FACE_GUIDE_CENTER_Y,
+  FACE_GUIDE_HEIGHT_RATIO,
   loadFaceApiModels,
 } from "@/lib/scan/detector";
 import type { ScanDecisionOutcome } from "@/lib/services/scan-decision-service";
@@ -237,30 +240,33 @@ export function ScanCamera({ applicationId }: { applicationId: string }) {
 }
 
 function FaceGuide({ ready }: { ready: boolean }) {
+  const tone = ready ? "border-cyan-300" : "border-amber-400";
+  const markerTone = ready ? "bg-cyan-300" : "bg-amber-400";
+
   return (
-    <svg
-      aria-hidden
-      className="pointer-events-none absolute inset-0 h-full w-full"
-      preserveAspectRatio="none"
-      viewBox="0 0 100 100"
-    >
-      <ellipse
-        cx="50"
-        cy="48"
-        fill="none"
-        rx="23"
-        ry="31"
-        stroke={ready ? "#67e8f9" : "#fbbf24"}
-        strokeDasharray="2 3"
-        strokeWidth="1.2"
-      />
-      <path
-        d="M50 13v8M50 75v8M19 48h8M73 48h8"
-        stroke={ready ? "#67e8f9" : "#fbbf24"}
-        strokeLinecap="round"
-        strokeWidth="1.5"
-      />
-    </svg>
+    <div aria-hidden className="pointer-events-none absolute inset-0">
+      <div
+        className={`absolute left-1/2 -translate-x-1/2 -translate-y-1/2 rounded-[50%] border-[1.5px] border-dashed ${tone}`}
+        style={{
+          top: `${FACE_GUIDE_CENTER_Y * 100}%`,
+          height: `${FACE_GUIDE_HEIGHT_RATIO * 100}%`,
+          aspectRatio: FACE_GUIDE_ASPECT_RATIO,
+        }}
+      >
+        <span
+          className={`absolute left-1/2 -top-7 h-7 w-px -translate-x-1/2 rounded-full ${markerTone}`}
+        />
+        <span
+          className={`absolute left-1/2 -bottom-7 h-7 w-px -translate-x-1/2 rounded-full ${markerTone}`}
+        />
+        <span
+          className={`absolute -left-7 top-1/2 h-px w-7 -translate-y-1/2 rounded-full ${markerTone}`}
+        />
+        <span
+          className={`absolute -right-7 top-1/2 h-px w-7 -translate-y-1/2 rounded-full ${markerTone}`}
+        />
+      </div>
+    </div>
   );
 }
 

@@ -1,0 +1,2 @@
+export const PAYMENT_AMOUNT_USD = 15;
+export const PAYMENT_PRICE_LABEL = `$${PAYMENT_AMOUNT_USD}`;

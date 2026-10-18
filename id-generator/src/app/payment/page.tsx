@@ -1,5 +1,6 @@
 import { PaymentOptions } from "./PaymentOptions";
 import Link from "next/link";
+import { PAYMENT_PRICE_LABEL } from "@/lib/payment/constants";
 
 export default function PaymentPage({
   searchParams,
@@ -45,7 +46,7 @@ export default function PaymentPage({
                 </span> profile
               </h1>
               <p className="max-w-xl text-[clamp(0.9rem,1.5vw,1rem)] leading-relaxed text-neutral-300">
-                Your identity scan has been verified. Finalize your application with a one-time payment of $20 to unlock your professional passport.
+                Your identity scan has been verified. Finalize your application with a one-time payment of {PAYMENT_PRICE_LABEL} to unlock your professional passport.
               </p>
             </div>
           </div>
@@ -60,7 +61,7 @@ export default function PaymentPage({
                 Scan passed
               </div>
               <h2 className="text-2xl font-bold text-white mb-2">Final Step</h2>
-              <p className="text-sm text-neutral-400">Complete your one-time $20 payment to finalize processing.</p>
+              <p className="text-sm text-neutral-400">Complete your one-time {PAYMENT_PRICE_LABEL} payment to finalize processing.</p>
             </div>
             
             <PaymentOptions applicationId={applicationId} />

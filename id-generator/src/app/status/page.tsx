@@ -2,6 +2,7 @@ import { prisma } from "@/lib/db";
 import Link from "next/link";
 import { ApplicationStatus } from "@/generated/prisma/client";
 import { StatusRefresh } from "./StatusRefresh";
+import { PAYMENT_PRICE_LABEL } from "@/lib/payment/constants";
 
 export default async function StatusPage({
   searchParams,
@@ -77,7 +78,7 @@ export default async function StatusPage({
               </div>
               <h1 className="text-3xl font-extrabold tracking-tight mb-3">Check Your Phone</h1>
               <p className="text-neutral-400 text-sm mb-4 leading-relaxed">
-                We sent an M-Pesa prompt to your phone. Please enter your PIN to complete the $20 payment.
+                We sent an M-Pesa prompt to your phone. Please enter your PIN to complete the {PAYMENT_PRICE_LABEL} payment.
               </p>
               <p className="text-[#4CAF50] text-xs font-semibold animate-pulse">Waiting for Safaricom confirmation...</p>
             </>
@@ -92,7 +93,7 @@ export default async function StatusPage({
               </div>
               <h1 className="text-3xl font-extrabold tracking-tight mb-3">Awaiting Payment</h1>
               <p className="text-neutral-400 text-sm mb-8 leading-relaxed">
-                Your application and identity scan are securely saved. Complete your $20 payment to begin processing.
+                Your application and identity scan are securely saved. Complete your {PAYMENT_PRICE_LABEL} payment to begin processing.
               </p>
               <Link
                 href={`/payment?applicationId=${applicationId}`}

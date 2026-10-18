@@ -5,6 +5,13 @@ type FaceApi = typeof import("face-api.js");
 let faceApiPromise: Promise<FaceApi> | null = null;
 let modelsPromise: Promise<FaceApi> | null = null;
 
+// The guide is sized from the rendered preview height so it remains a
+// portrait-shaped target on both portrait and landscape layouts.
+export const FACE_GUIDE_CENTER_X = 0.5;
+export const FACE_GUIDE_CENTER_Y = 0.48;
+export const FACE_GUIDE_HEIGHT_RATIO = 0.72;
+export const FACE_GUIDE_ASPECT_RATIO = 4 / 5;
+
 export async function loadFaceApiModels(): Promise<FaceApi> {
   if (!faceApiPromise) {
     faceApiPromise = import("face-api.js");
@@ -49,7 +56,12 @@ export async function detectVideoFrame(
     };
   }
 
-  const guide = getGuideBounds(video.videoWidth, video.videoHeight);
+  const guide = getGuideBounds(
+    video.videoWidth,
+    video.videoHeight,
+    video.clientWidth || video.videoWidth,
+    video.clientHeight || video.videoHeight,
+  );
   const box = primary.box;
   const faceCenterX = box.x + box.width / 2;
   const faceCenterY = box.y + box.height / 2;
@@ -77,26 +89,96 @@ export async function detectVideoFrame(
 export function captureThumbnailDataUrl(video: HTMLVideoElement): string {
   const canvas = document.createElement("canvas");
   const maxWidth = 240;
-  const scale = maxWidth / video.videoWidth;
+  const visible = getVisibleSourceRect(
+    video.videoWidth,
+    video.videoHeight,
+    video.clientWidth || video.videoWidth,
+    video.clientHeight || video.videoHeight,
+  );
+  const scale = maxWidth / visible.width;
   canvas.width = maxWidth;
-  canvas.height = Math.round(video.videoHeight * scale);
+  canvas.height = Math.round(visible.height * scale);
 
   const context = canvas.getContext("2d");
   if (!context) {
     throw new Error("Unable to capture thumbnail frame.");
   }
 
-  context.drawImage(video, 0, 0, canvas.width, canvas.height);
+  context.drawImage(
+    video,
+    visible.x,
+    visible.y,
+    visible.width,
+    visible.height,
+    0,
+    0,
+    canvas.width,
+    canvas.height,
+  );
   return canvas.toDataURL("image/jpeg", 0.6);
 }
 
-function getGuideBounds(videoWidth: number, videoHeight: number) {
-  const width = videoWidth * 0.46;
-  const height = videoHeight * 0.62;
+export type SourceRect = {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+};
+
+/**
+ * Returns the source pixels visible when the video uses object-fit: cover.
+ * The detector works in source pixels, while the guide is drawn in the
+ * rendered preview, so this crop is the bridge between the two coordinate
+ * systems.
+ */
+export function getVisibleSourceRect(
+  videoWidth: number,
+  videoHeight: number,
+  displayWidth: number,
+  displayHeight: number,
+): SourceRect {
+  const sourceAspect = videoWidth / videoHeight;
+  const displayAspect = displayWidth / displayHeight;
+
+  if (sourceAspect > displayAspect) {
+    const visibleWidth = videoHeight * displayAspect;
+    return {
+      x: (videoWidth - visibleWidth) / 2,
+      y: 0,
+      width: visibleWidth,
+      height: videoHeight,
+    };
+  }
+
+  const visibleHeight = videoWidth / displayAspect;
+  return {
+    x: 0,
+    y: (videoHeight - visibleHeight) / 2,
+    width: videoWidth,
+    height: visibleHeight,
+  };
+}
+
+export function getGuideBounds(
+  videoWidth: number,
+  videoHeight: number,
+  displayWidth = videoWidth,
+  displayHeight = videoHeight,
+): SourceRect {
+  const visible = getVisibleSourceRect(
+    videoWidth,
+    videoHeight,
+    displayWidth,
+    displayHeight,
+  );
+  const displayGuideHeight = displayHeight * FACE_GUIDE_HEIGHT_RATIO;
+  const displayGuideWidth = displayGuideHeight * FACE_GUIDE_ASPECT_RATIO;
+  const width = displayGuideWidth * (visible.width / displayWidth);
+  const height = displayGuideHeight * (visible.height / displayHeight);
 
   return {
-    x: (videoWidth - width) / 2,
-    y: (videoHeight - height) / 2,
+    x: visible.x + visible.width * FACE_GUIDE_CENTER_X - width / 2,
+    y: visible.y + visible.height * FACE_GUIDE_CENTER_Y - height / 2,
     width,
     height,
   };

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { PAYMENT_PRICE_LABEL } from "@/lib/payment/constants";
 
 export default function Home() {
   return (
@@ -28,7 +29,7 @@ export default function Home() {
 
         {/* Description */}
         <p className="max-w-2xl text-[clamp(0.9rem,2.5vw,1.15rem)] text-neutral-300 mb-[5vh] leading-relaxed shrink-0 px-4">
-          For just <strong className="text-white font-semibold">$20</strong>, secure a verified passport to the gig economy. 
+          For just <strong className="text-white font-semibold">{PAYMENT_PRICE_LABEL}</strong>, secure a verified passport to the gig economy.
           Use your Freelance ID to unlock high-paying clients and seamlessly access exclusive platforms worldwide.
         </p>
 
@@ -38,7 +39,7 @@ export default function Home() {
             href="/apply"
             className="group relative inline-flex items-center justify-center gap-3 px-6 sm:px-8 py-3 sm:py-4 bg-white text-black rounded-full text-[clamp(1rem,2vw,1.125rem)] font-bold transition-all hover:bg-neutral-200 hover:scale-[1.02] active:scale-[0.98] shadow-[0_0_40px_rgba(255,255,255,0.1)] hover:shadow-[0_0_60px_rgba(6,182,212,0.3)]"
           >
-            Get Your Freelance ID – $20
+            Get Your Freelance ID – {PAYMENT_PRICE_LABEL}
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-5 h-5 group-hover:translate-x-1 transition-transform">
               <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" />
             </svg>
