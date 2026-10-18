@@ -6,9 +6,9 @@ import {
   VerificationCheckpoint,
 } from "@/components/VerificationCheckpoint";
 import { ApplicationStatus, ScanResult } from "@/generated/prisma/client";
+import { getDocumentType } from "@/lib/identity/document-verification";
 import { prisma } from "@/lib/db";
 import { getVerificationFlowState } from "@/lib/identity/verification-flow";
-import { getDocumentType } from "@/lib/identity/document-verification";
 
 export const metadata: Metadata = {
   title: "Scan document | Freelance ID",
@@ -109,29 +109,9 @@ export default async function DocumentScanPage({
   }
 
   return (
-    <main className="min-h-[100dvh] w-full overflow-y-auto bg-[#050505] text-neutral-50 selection:bg-cyan-500/30">
-      <div className="mx-auto grid min-h-[100dvh] w-full max-w-6xl items-center gap-8 px-4 py-8 lg:grid-cols-[0.7fr_1.3fr] lg:gap-14">
-        <section className="hidden space-y-8 lg:block">
-          <StepRail activeStep={2} />
-          <div>
-            <p className="text-sm font-medium text-cyan-300">Document scan</p>
-            <h1 className="mt-3 text-4xl font-extrabold tracking-tight text-white">
-              Put the right document in view.
-            </h1>
-            <p className="mt-5 max-w-lg text-base leading-7 text-neutral-400">
-              Your choices are confirmed. The camera now has the full workspace so you can see exactly what you are aligning.
-            </p>
-          </div>
-          <div className="grid gap-3 text-sm text-neutral-300">
-            <TrustNote title="Clear before capture" text="Review the selected document details above the camera before you align anything." />
-            <TrustNote title="Demo capture" text="This frame simulates alignment only. No document contents are read or stored." />
-          </div>
-        </section>
-
-        <section className="mx-auto w-full max-w-3xl rounded-3xl border border-white/10 bg-[#0a0a0a]/90 p-5 shadow-[0_0_60px_rgba(0,0,0,0.5)] backdrop-blur-2xl sm:p-8">
-          <div className="mb-6 lg:hidden">
-            <StepRail activeStep={2} />
-          </div>
+    <main className="flex min-h-[100dvh] w-full items-center justify-center overflow-y-auto bg-[#050505] text-neutral-50 selection:bg-cyan-500/30">
+      <div className="w-full max-w-3xl px-4 py-6 sm:py-10">
+        <section className="mx-auto w-full rounded-3xl border border-white/10 bg-[#0a0a0a]/90 p-4 shadow-[0_0_60px_rgba(0,0,0,0.5)] backdrop-blur-2xl sm:p-8">
           <DocumentScanForm
             applicationId={application.id}
             initialValues={{
@@ -169,40 +149,4 @@ function formatDocumentType(value: string | null): string {
     .split("_")
     .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
     .join(" ");
-}
-
-function StepRail({ activeStep }: { activeStep: number }) {
-  const steps = ["Profile", "Document", "Face"];
-
-  return (
-    <ol className="grid gap-3 sm:grid-cols-3 lg:grid-cols-1">
-      {steps.map((step, index) => {
-        const stepNumber = index + 1;
-        const isActive = stepNumber === activeStep;
-        const isComplete = stepNumber < activeStep;
-
-        return (
-          <li className="flex items-center gap-3" key={step}>
-            <span
-              className={`flex h-8 w-8 items-center justify-center rounded-full border text-xs font-bold ${isActive ? "border-cyan-300 bg-cyan-300 text-neutral-950" : isComplete ? "border-emerald-300/50 bg-emerald-300/10 text-emerald-200" : "border-neutral-700 text-neutral-500"}`}
-            >
-              {isComplete ? "✓" : stepNumber}
-            </span>
-            <span className={isActive ? "text-sm font-semibold text-white" : "text-sm text-neutral-500"}>
-              {step}
-            </span>
-          </li>
-        );
-      })}
-    </ol>
-  );
-}
-
-function TrustNote({ title, text }: { title: string; text: string }) {
-  return (
-    <div className="rounded-xl border border-white/10 bg-white/[0.03] p-4">
-      <p className="font-semibold text-white">{title}</p>
-      <p className="mt-1 text-xs leading-5 text-neutral-400">{text}</p>
-    </div>
-  );
 }

@@ -4,18 +4,21 @@ export const documentTypes = [
     label: "National ID card",
     frameLabel: "ID card",
     aspectRatio: 1.586,
+    scanSides: ["front", "back"],
   },
   {
     value: "passport",
     label: "Passport",
     frameLabel: "Passport",
     aspectRatio: 1.42,
+    scanSides: ["front"],
   },
   {
     value: "drivers_license",
     label: "Driver's license",
     frameLabel: "Driver's license",
     aspectRatio: 1.586,
+    scanSides: ["front", "back"],
   },
 ] as const;
 
@@ -40,7 +43,12 @@ export const residenceCountries = [
 ] as const;
 
 export type DocumentType = (typeof documentTypes)[number]["value"];
+export type DocumentScanSide = "front" | "back";
 
 export function getDocumentType(value: string) {
   return documentTypes.find((documentType) => documentType.value === value);
+}
+
+export function getDocumentScanSides(value: string): readonly DocumentScanSide[] {
+  return getDocumentType(value)?.scanSides ?? ["front"];
 }

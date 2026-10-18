@@ -50,10 +50,10 @@ export function DocumentScanForm({
 
       <div className="flex items-start justify-between gap-4">
         <div>
-          <p className="text-xs font-semibold tracking-[0.18em] text-cyan-300">SCAN STEP</p>
-          <h2 className="mt-2 text-2xl font-bold text-white">Now scan your document</h2>
+          <p className="text-xs font-semibold tracking-[0.18em] text-cyan-300">DOCUMENT SCAN</p>
+          <h2 className="mt-2 text-2xl font-bold text-white">Scan your document</h2>
           <p className="mt-2 text-sm leading-6 text-neutral-400">
-            Your details are saved below. Place the selected document inside the guide when you are ready.
+            Follow the frame for each required side.
           </p>
         </div>
         <Link
@@ -64,7 +64,7 @@ export function DocumentScanForm({
         </Link>
       </div>
 
-      <dl className="grid gap-3 rounded-xl border border-white/10 bg-white/[0.03] p-4 sm:grid-cols-3">
+      <dl className="grid gap-3 rounded-xl border border-white/10 bg-white/[0.03] p-4 sm:grid-cols-4">
         <SummaryItem
           label="Residence"
           value={formatCountry(values.countryOfResidence)}
@@ -74,15 +74,17 @@ export function DocumentScanForm({
           label="Issuing country"
           value={formatCountry(values.documentIssuingCountry)}
         />
+        <SummaryItem
+          label="Scan"
+          value={selectedDocument.scanSides.length === 2 ? "Front + back" : "Single side"}
+        />
       </dl>
 
       <div className="rounded-2xl border border-cyan-300/20 bg-cyan-300/[0.04] p-3 sm:p-4">
         <div className="mb-4 flex items-center justify-between gap-3 px-1">
           <div>
             <p className="text-sm font-semibold text-neutral-100">Document camera</p>
-            <p className="mt-1 text-xs leading-5 text-neutral-400">
-              The frame is shaped for your {selectedDocument.frameLabel.toLowerCase()}.
-            </p>
+            <p className="mt-1 text-xs leading-5 text-neutral-400">{selectedDocument.frameLabel}</p>
           </div>
           <span className="rounded-full border border-emerald-300/20 bg-emerald-300/10 px-2 py-1 text-[10px] font-semibold text-emerald-200">
             DEMO
@@ -103,7 +105,7 @@ export function DocumentScanForm({
           type="checkbox"
         />
         <span>
-          I confirm that this document belongs to me and that the selected details are accurate.
+          I confirm this document belongs to me.
         </span>
       </label>
       <InlineError message={state.errors.documentConsent?.[0]} />

@@ -4,8 +4,15 @@ import {
   validateDocumentDetails,
   validateDocumentVerificationForm,
 } from "@/lib/validation/document-verification";
+import { getDocumentScanSides } from "@/lib/identity/document-verification";
 
 describe("document verification form validation", () => {
+  it("requires two sides for cards and one side for passports", () => {
+    expect(getDocumentScanSides("national_id")).toEqual(["front", "back"]);
+    expect(getDocumentScanSides("drivers_license")).toEqual(["front", "back"]);
+    expect(getDocumentScanSides("passport")).toEqual(["front"]);
+  });
+
   it("accepts document details before the scan step", () => {
     const result = validateDocumentDetails({
       countryOfResidence: "KE",
