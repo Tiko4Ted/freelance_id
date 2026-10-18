@@ -9,7 +9,7 @@ import {
 } from "@/lib/identity/document-verification";
 
 type CameraState = "preparing" | "ready" | "blocked";
-type CaptureState = "idle" | "capturing" | "captured";
+type CaptureState = "idle" | "capturing";
 
 export function DocumentScanCamera({
   documentType,
@@ -25,15 +25,16 @@ export function DocumentScanCamera({
   const [captureState, setCaptureState] = useState<CaptureState>("idle");
   const [scanSideIndex, setScanSideIndex] = useState(0);
   const [capturedSides, setCapturedSides] = useState<DocumentScanSide[]>([]);
-  const [statusText, setStatusText] = useState("Preparing document camera");
+  const [statusText, setStatusText] = useState("Preparing camera");
   const selectedDocument = useMemo(
     () => getDocumentType(documentType) ?? documentTypes[0],
     [documentType],
   );
   const scanSides = selectedDocument.scanSides;
   const currentSide = scanSides[scanSideIndex] ?? scanSides[0];
-  const sideLabel = currentSide === "back" ? "Back side" : "Front side";
-  const isLastSide = scanSideIndex === scanSides.length - 1;
+  const currentSideCaptured = capturedSides.includes(currentSide);
+  const hasMultipleSides = scanSides.length > 1;
+  const allSidesCaptured = capturedSides.length === scanSides.length;
 
   useEffect(() => {
     let cancelled = false;
@@ -60,9 +61,10 @@ export function DocumentScanCamera({
           await videoRef.current.play();
         }
         setCameraState("ready");
+        setStatusText("Camera ready");
       } catch {
         setCameraState("blocked");
-        setStatusText("Camera unavailable. Continue with the demo alignment.");
+        setStatusText("Camera unavailable");
       }
     }
 
@@ -70,7 +72,7 @@ export function DocumentScanCamera({
       void prepareCamera();
     } else {
       setCameraState("blocked");
-      setStatusText("Camera unavailable. Continue with the demo alignment.");
+      setStatusText("Camera unavailable");
     }
 
     return () => {
@@ -89,55 +91,43 @@ export function DocumentScanCamera({
     onCaptureComplete(false);
   }, [documentType, onCaptureComplete]);
 
-  useEffect(() => {
-    if (cameraState === "ready" && captureState === "idle") {
-      setStatusText(`Place the ${sideLabel.toLowerCase()} inside the frame`);
-    }
-  }, [cameraState, captureState, sideLabel]);
-
   function simulateCapture() {
-    if (captureState !== "idle" || cameraState === "preparing") {
+    if (
+      captureState !== "idle" ||
+      cameraState === "preparing" ||
+      currentSideCaptured
+    ) {
       return;
     }
 
     setCaptureState("capturing");
-    setStatusText(`Checking the ${sideLabel.toLowerCase()} alignment`);
+    setStatusText("Scanning");
     captureTimerRef.current = window.setTimeout(() => {
-      const nextCapturedSides = capturedSides.includes(currentSide)
-        ? capturedSides
-        : [...capturedSides, currentSide];
+      const nextCapturedSides = [...capturedSides, currentSide];
       const complete = nextCapturedSides.length === scanSides.length;
 
       setCapturedSides(nextCapturedSides);
-      setCaptureState("captured");
+      setCaptureState("idle");
+      setStatusText(complete ? "Scan complete" : "Scan saved");
       onCaptureComplete(complete);
-      setStatusText(
-        complete
-          ? "All required sides aligned."
-          : "Front side accepted. Turn the document over for the back side.",
-      );
     }, 1_200);
   }
 
-  function continueToNextSide() {
-    if (captureState !== "captured" || isLastSide) {
+  function toggleSide() {
+    if (!hasMultipleSides || captureState === "capturing") {
       return;
     }
 
-    setScanSideIndex((currentIndex) => currentIndex + 1);
-    setCaptureState("idle");
+    if (!capturedSides.includes("front")) {
+      return;
+    }
+
+    setScanSideIndex((currentIndex) => (currentIndex === 0 ? 1 : 0));
+    setStatusText("Camera ready");
   }
 
-  const buttonLabel =
-    captureState === "capturing"
-      ? `Checking ${sideLabel.toLowerCase()}...`
-      : captureState === "captured"
-        ? isLastSide
-          ? "All sides aligned"
-          : "Continue to back side"
-        : scanSides.length === 1
-          ? "Scan document"
-          : `Scan ${sideLabel.toLowerCase()}`;
+  const sideLabel = currentSide === "back" ? "Back" : "Front";
+  const toggleLabel = currentSide === "front" ? "Back" : "Front";
 
   return (
     <div className="grid gap-3">
@@ -152,7 +142,7 @@ export function DocumentScanCamera({
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_34%,rgba(0,0,0,0.62)_76%)]" />
         <div className="pointer-events-none absolute inset-0 flex items-center justify-center p-6">
           <div
-            className={`relative w-full max-w-[27rem] rounded-lg border-2 border-dashed transition-colors ${captureState === "captured" ? "border-emerald-300" : "border-cyan-300"}`}
+            className={`relative w-full max-w-[27rem] rounded-lg border-2 border-dashed transition-colors ${currentSideCaptured ? "border-emerald-300" : "border-cyan-300"}`}
             style={{ aspectRatio: selectedDocument.aspectRatio }}
           >
             <div className="absolute -inset-1 rounded-lg border border-white/20" />
@@ -163,32 +153,51 @@ export function DocumentScanCamera({
             {captureState === "capturing" ? (
               <div className="absolute inset-x-2 top-1/2 h-px animate-pulse bg-cyan-200 shadow-[0_0_18px_rgba(103,232,249,0.9)]" />
             ) : null}
-            <div className="absolute inset-x-0 bottom-3 text-center text-[10px] font-semibold tracking-[0.18em] text-white/70">
-              {sideLabel.toUpperCase()} FRAME
-            </div>
           </div>
         </div>
-        <div className="absolute left-3 top-3 rounded-full border border-white/15 bg-black/55 px-3 py-1 text-[11px] font-medium text-white/80 backdrop-blur">
-          {sideLabel} · {scanSideIndex + 1} of {scanSides.length}
-        </div>
+        <span className="sr-only" aria-live="polite">
+          {statusText}
+        </span>
       </div>
 
-      <div className="flex items-center justify-between gap-3 text-xs text-neutral-400">
-        <span aria-live="polite">{statusText}</span>
-        <span className="shrink-0 text-neutral-500">{selectedDocument.frameLabel}</span>
+      <div className="flex flex-wrap items-center justify-center gap-2">
+        <button
+          className="h-10 rounded-md bg-cyan-300 px-4 text-sm font-semibold text-neutral-950 transition hover:bg-cyan-200 disabled:cursor-not-allowed disabled:bg-neutral-700 disabled:text-neutral-300"
+          disabled={
+            cameraState !== "ready" ||
+            captureState === "capturing" ||
+            currentSideCaptured
+          }
+          onClick={simulateCapture}
+          type="button"
+        >
+          {captureState === "capturing"
+            ? "Scanning..."
+            : currentSideCaptured
+              ? `${sideLabel} saved`
+              : `Scan ${sideLabel.toLowerCase()}`}
+        </button>
+
+        {hasMultipleSides ? (
+          <button
+            aria-label={`Open ${toggleLabel.toLowerCase()} side`}
+            className="h-10 rounded-md border border-neutral-600 px-4 text-sm font-semibold text-neutral-200 transition hover:border-cyan-300/60 hover:text-white disabled:cursor-not-allowed disabled:opacity-40"
+            disabled={
+              cameraState !== "ready" ||
+              captureState === "capturing" ||
+              !capturedSides.includes("front")
+            }
+            onClick={toggleSide}
+            type="button"
+          >
+            {toggleLabel}
+          </button>
+        ) : null}
       </div>
 
-      <button
-        className="h-11 rounded-md border border-cyan-300/50 bg-cyan-300/10 px-4 text-sm font-semibold text-cyan-100 transition hover:bg-cyan-300/20 disabled:cursor-not-allowed disabled:opacity-50"
-        disabled={
-          cameraState === "preparing" ||
-          (captureState === "captured" && isLastSide)
-        }
-        onClick={captureState === "captured" ? continueToNextSide : simulateCapture}
-        type="button"
-      >
-        {buttonLabel}
-      </button>
+      <span className="sr-only">
+        {allSidesCaptured ? "All document scans saved" : `Current side: ${sideLabel}`}
+      </span>
     </div>
   );
 }
