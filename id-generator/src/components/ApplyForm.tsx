@@ -137,7 +137,7 @@ function SubmitButton() {
       disabled={status.pending}
       type="submit"
     >
-      {status.pending ? "Submitting..." : "Continue to scan"}
+      {status.pending ? "Submitting..." : "Continue to document verification"}
     </button>
   );
 }

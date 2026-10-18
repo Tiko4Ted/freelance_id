@@ -13,10 +13,18 @@ export default async function ScanPage({
   if (applicationId) {
     const application = await prisma.freelanceIdApplication.findUnique({
       where: { id: applicationId },
-      include: { scanAttempts: true },
+      select: {
+        status: true,
+        documentVerifiedAt: true,
+        scanAttempts: { select: { detectionResult: true } },
+      },
     });
 
     if (application) {
+      if (!application.documentVerifiedAt) {
+        redirect(`/verify-document?applicationId=${applicationId}`);
+      }
+
       if (
         application.status === ApplicationStatus.PROCESSING ||
         application.status === ApplicationStatus.APPROVED ||
@@ -53,14 +61,14 @@ export default async function ScanPage({
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-3.5 h-3.5 text-cyan-400">
                   <path strokeLinecap="round" strokeLinejoin="round" d="m3.75 13.5 10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75Z" />
                 </svg>
-                Identity Scan
+                Facial verification
               </div>
               <h1 className="text-[clamp(2rem,4vw,3rem)] font-extrabold tracking-tight leading-[1.1]">
-                Center your face <br className="hidden lg:block" />
+                Finish with a facial <br className="hidden lg:block" />
                 for the <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-indigo-400">verification</span>
               </h1>
               <p className="max-w-xl text-[clamp(0.9rem,1.5vw,1.125rem)] leading-relaxed text-neutral-300">
-                Keep one face in frame, face the camera directly, and use steady lighting.
+                Your document details are saved. Keep one face in frame, face the camera directly, and use steady lighting.
               </p>
             </div>
           </div>
@@ -68,7 +76,7 @@ export default async function ScanPage({
           {/* Right Column: Camera */}
           <div className="relative rounded-3xl border border-white/10 bg-[#0a0a0a]/80 p-4 sm:p-6 backdrop-blur-2xl shadow-[0_0_60px_rgba(0,0,0,0.5)] w-full max-w-md mx-auto sm:max-w-none flex flex-col justify-center max-h-[90dvh]">
             <div className="sm:hidden text-center mb-4">
-              <h2 className="text-xl font-bold text-white mb-1">Identity Scan</h2>
+              <h2 className="text-xl font-bold text-white mb-1">Facial verification</h2>
               <p className="text-xs text-neutral-400">Center your face in the guide</p>
             </div>
             {applicationId ? (

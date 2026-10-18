@@ -34,8 +34,7 @@ export default function ApplyPage() {
                 </span> application
               </h1>
               <p className="max-w-xl text-[clamp(0.9rem,1.5vw,1.125rem)] leading-relaxed text-neutral-300">
-                Submit basic contact details before the scan-quality step. 
-                Experience the next generation of professional identity verification.
+                Complete your profile, confirm your document details, then finish with a guided facial verification.
               </p>
             </div>
 

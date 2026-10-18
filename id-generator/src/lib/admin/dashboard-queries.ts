@@ -24,6 +24,10 @@ export type DashboardApplicationDetail = {
   dateOfBirth: Date;
   email: string;
   phone: string;
+  countryOfResidence: string | null;
+  documentType: string | null;
+  documentIssuingCountry: string | null;
+  documentVerifiedAt: Date | null;
   status: ApplicationStatus;
   rejectionReason: string | null;
   reapplyCooldownUntil: Date | null;
@@ -95,6 +99,10 @@ export async function getDashboardApplicationDetail(
       dateOfBirth: true,
       email: true,
       phone: true,
+      countryOfResidence: true,
+      documentType: true,
+      documentIssuingCountry: true,
+      documentVerifiedAt: true,
       status: true,
       rejectionReason: true,
       reapplyCooldownUntil: true,

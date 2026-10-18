@@ -55,6 +55,30 @@ export default async function DashboardDetailPage({
                 <Field label="Date of birth" value={formatDate(application.dateOfBirth)} />
                 <Field label="Email" value={application.email} />
                 <Field label="Phone" value={application.phone} />
+                <Field
+                  label="Country of residence"
+                  value={application.countryOfResidence ?? "Not provided"}
+                />
+                <Field
+                  label="Document"
+                  value={
+                    application.documentType
+                      ? formatDocumentType(application.documentType)
+                      : "Not provided"
+                  }
+                />
+                <Field
+                  label="Document issuing country"
+                  value={application.documentIssuingCountry ?? "Not provided"}
+                />
+                <Field
+                  label="Document verification"
+                  value={
+                    application.documentVerifiedAt
+                      ? formatDateTime(application.documentVerifiedAt)
+                      : "Not completed"
+                  }
+                />
                 <Field label="Submitted" value={formatDateTime(application.submittedAt)} />
                 <Field
                   label="Reviewed"
@@ -221,4 +245,11 @@ function formatDateTime(date: Date): string {
     dateStyle: "medium",
     timeStyle: "short",
   }).format(date);
+}
+
+function formatDocumentType(value: string): string {
+  return value
+    .split("_")
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(" ");
 }

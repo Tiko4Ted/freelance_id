@@ -35,5 +35,5 @@ export async function submitApplicationForm(
     return { errors: { form: [result.message] }, values };
   }
 
-  redirect(`/scan?applicationId=${result.applicationId}`);
+  redirect(`/verify-document?applicationId=${result.applicationId}`);
 }

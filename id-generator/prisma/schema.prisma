@@ -14,6 +14,10 @@ model FreelanceIdApplication {
   dateOfBirth              DateTime            @map("date_of_birth") @db.Date
   email                    String
   phone                    String
+  countryOfResidence      String?             @map("country_of_residence")
+  documentType             String?             @map("document_type")
+  documentIssuingCountry   String?             @map("document_issuing_country")
+  documentVerifiedAt       DateTime?           @map("document_verified_at")
   consentAt                DateTime            @map("consent_at")
   status                   ApplicationStatus   @default(PENDING)
   finalDecisionSource      DecisionSource?     @map("final_decision_source")

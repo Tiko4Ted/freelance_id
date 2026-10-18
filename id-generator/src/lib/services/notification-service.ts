@@ -46,6 +46,8 @@ export class NotificationService {
         `Hello ${input.legalName},`,
         "",
         "Application received. Proceed to the identity scan to continue your Freelance ID application.",
+        "Next, confirm your country of residence and align your document with the guided frame before facial verification.",
+        "This workflow is not real KYC or government identity verification.",
       ].join("\n"),
     });
   }
