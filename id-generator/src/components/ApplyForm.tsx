@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { useFormState, useFormStatus } from "react-dom";
 
 import { submitApplicationForm } from "@/app/apply/actions";
@@ -29,11 +30,8 @@ export function ApplyForm() {
         type="text"
         value={state.values.legalName}
       />
-      <Field
+      <DateOfBirthField
         error={state.errors.dateOfBirth?.[0]}
-        label="Date of birth"
-        name="dateOfBirth"
-        type="date"
         value={state.values.dateOfBirth}
       />
       <Field
@@ -68,6 +66,40 @@ export function ApplyForm() {
 
       <SubmitButton />
     </form>
+  );
+}
+
+function DateOfBirthField({ error, value }: { error?: string; value: string }) {
+  const [dateOfBirth, setDateOfBirth] = useState(value);
+  const hintId = "dateOfBirth-hint";
+  const errorId = "dateOfBirth-error";
+
+  useEffect(() => {
+    setDateOfBirth(value);
+  }, [value]);
+
+  return (
+    <div className="grid gap-2">
+      <label className="text-sm font-medium text-neutral-100" htmlFor="dateOfBirth">
+        Date of birth
+      </label>
+      <input
+        aria-describedby={error ? `${hintId} ${errorId}` : hintId}
+        aria-invalid={Boolean(error)}
+        autoComplete="bday"
+        className="h-11 rounded-md border border-neutral-700 bg-neutral-950 px-3 text-base text-neutral-50 outline-none transition focus:border-cyan-300"
+        id="dateOfBirth"
+        inputMode="numeric"
+        name="dateOfBirth"
+        onChange={(event) => setDateOfBirth(event.target.value)}
+        type="date"
+        value={dateOfBirth}
+      />
+      <p className="text-xs leading-5 text-neutral-400" id={hintId}>
+        Use the calendar or enter your date in the field.
+      </p>
+      <InlineError id={errorId} message={error} />
+    </div>
   );
 }
 

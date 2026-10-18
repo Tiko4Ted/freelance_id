@@ -8,14 +8,14 @@ export const metadata: Metadata = {
 
 export default function ApplyPage() {
   return (
-    <main className="h-[100dvh] w-[100vw] bg-[#050505] text-neutral-50 selection:bg-cyan-500/30 overflow-hidden relative font-sans flex items-center">
+    <main className="relative flex h-[100dvh] w-full items-start overflow-x-hidden overflow-y-auto bg-[#050505] font-sans text-neutral-50 selection:bg-cyan-500/30 sm:items-center">
       {/* Background Effects */}
       <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
         <div className="absolute -top-[20%] -right-[10%] w-[800px] h-[800px] rounded-full bg-cyan-900/20 blur-[150px]" />
         <div className="absolute top-[60%] -left-[10%] w-[600px] h-[600px] rounded-full bg-indigo-900/20 blur-[150px]" />
       </div>
 
-      <div className="relative z-10 mx-auto max-w-7xl px-4 py-[4vh] w-full max-h-[100dvh] flex flex-col justify-center">
+      <div className="relative z-10 mx-auto flex w-full max-w-7xl flex-col px-4 py-6 sm:py-10">
         <div className="grid gap-6 lg:gap-12 lg:grid-cols-[1fr_1fr] items-center">
           
           {/* Left Column: Copy & Feature Highlights */}
