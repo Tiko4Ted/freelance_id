@@ -104,17 +104,17 @@ export default async function DocumentVerificationPage({
         <section className="hidden space-y-8 lg:block">
           <StepRail activeStep={2} />
           <div>
-            <p className="text-sm font-medium text-cyan-300">Document checkpoint</p>
+            <p className="text-sm font-medium text-cyan-300">Document details</p>
             <h1 className="mt-3 text-4xl font-extrabold tracking-tight text-white">
-              Confirm the document behind your professional identity.
+              Tell us which document you will present.
             </h1>
             <p className="mt-5 max-w-lg text-base leading-7 text-neutral-400">
-              Tell us where you live and which document you are presenting. The guided frame prepares the next verification step without storing document contents.
+              Choose the details first. The next screen will show your selections above a dedicated document camera.
             </p>
           </div>
           <div className="grid gap-3 text-sm text-neutral-300">
+            <TrustNote title="Review before scanning" text="Your selections will be shown again before the camera opens." />
             <TrustNote title="Private by design" text="No document number or image is retained in this demo." />
-            <TrustNote title="One clear checkpoint" text="Select the document type so the frame matches its shape." />
           </div>
         </section>
 
@@ -126,9 +126,9 @@ export default async function DocumentVerificationPage({
             <p className="text-xs font-semibold tracking-[0.18em] text-cyan-300">
               STEP 2 OF 3
             </p>
-            <h2 className="mt-2 text-2xl font-bold text-white">Document verification</h2>
+            <h2 className="mt-2 text-2xl font-bold text-white">Document details</h2>
             <p className="mt-2 text-sm leading-6 text-neutral-400">
-              Choose your document and align it with the frame. This is a simulated document check for the portfolio workflow.
+              Select your residence, document type, and issuing country. You will scan on the next screen.
             </p>
           </div>
           <DocumentVerificationForm

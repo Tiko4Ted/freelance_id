@@ -1,18 +1,13 @@
 "use client";
 
-import { useCallback, useState } from "react";
 import { useFormState, useFormStatus } from "react-dom";
 
-import { DocumentScanCamera } from "@/components/DocumentScanCamera";
-import { submitDocumentVerification } from "@/app/verify-document/actions";
+import { saveDocumentDetails } from "@/app/verify-document/actions";
 import {
   initialDocumentVerificationFormState,
   type DocumentVerificationFormState,
 } from "@/app/verify-document/form-state";
-import {
-  documentTypes,
-  residenceCountries,
-} from "@/lib/identity/document-verification";
+import { residenceCountries, documentTypes } from "@/lib/identity/document-verification";
 
 export function DocumentVerificationForm({
   applicationId,
@@ -22,32 +17,26 @@ export function DocumentVerificationForm({
   initialValues?: Partial<DocumentVerificationFormState["values"]>;
 }) {
   const [state, formAction] = useFormState(
-    submitDocumentVerification,
+    saveDocumentDetails,
     initialDocumentVerificationFormState,
-  );
-  const [documentCaptured, setDocumentCaptured] = useState(
-    Boolean(initialValues?.documentScanConfirmed),
-  );
-  const [selectedDocumentType, setSelectedDocumentType] = useState(
-    initialValues?.documentType ?? "",
   );
   const values = {
     ...initialDocumentVerificationFormState.values,
     ...initialValues,
     ...(Object.keys(state.errors).length > 0 ? state.values : {}),
-    documentScanConfirmed: documentCaptured,
   };
-  const handleCaptureComplete = useCallback((captured: boolean) => {
-    setDocumentCaptured(captured);
-  }, []);
 
   return (
     <form action={formAction} className="grid gap-6" noValidate>
       <input name="applicationId" type="hidden" value={applicationId} />
-      {documentCaptured ? (
-        <input name="documentScanConfirmed" type="hidden" value="on" />
-      ) : null}
       <FormError state={state} />
+
+      <div className="rounded-xl border border-cyan-300/15 bg-cyan-300/[0.04] p-4">
+        <p className="text-sm font-semibold text-neutral-100">First, confirm your document details</p>
+        <p className="mt-1 text-xs leading-5 text-neutral-400">
+          Your selections will be saved and shown again before the camera opens.
+        </p>
+      </div>
 
       <div className="grid gap-4 sm:grid-cols-2">
         <SelectField
@@ -62,7 +51,6 @@ export function DocumentVerificationForm({
           error={state.errors.documentType?.[0]}
           label="Document type"
           name="documentType"
-          onChange={setSelectedDocumentType}
           options={documentTypes}
           placeholder="Select document"
           value={values.documentType}
@@ -78,41 +66,7 @@ export function DocumentVerificationForm({
         value={values.documentIssuingCountry}
       />
 
-      <div className="rounded-xl border border-cyan-300/15 bg-cyan-300/[0.04] p-4">
-        <div className="mb-4 flex items-start justify-between gap-4">
-          <div>
-            <p className="text-sm font-semibold text-neutral-100">
-              Align your document
-            </p>
-            <p className="mt-1 text-xs leading-5 text-neutral-400">
-              This is a guided demo frame. We do not read, validate, or store document contents.
-            </p>
-          </div>
-          <span className="rounded-full border border-emerald-300/20 bg-emerald-300/10 px-2 py-1 text-[10px] font-semibold text-emerald-200">
-            DEMO
-          </span>
-        </div>
-        <DocumentScanCamera
-          documentType={selectedDocumentType}
-          onCaptureComplete={handleCaptureComplete}
-        />
-        <InlineError message={state.errors.documentScanConfirmed?.[0]} />
-      </div>
-
-      <label className="flex items-start gap-3 text-sm leading-6 text-neutral-200">
-        <input
-          className="mt-1 h-4 w-4 rounded border-neutral-500 bg-neutral-950 text-cyan-300"
-          defaultChecked={values.documentConsent}
-          name="documentConsent"
-          type="checkbox"
-        />
-        <span>
-          I confirm that this document belongs to me and that the selected details are accurate.
-        </span>
-      </label>
-      <InlineError message={state.errors.documentConsent?.[0]} />
-
-      <SubmitButton disabled={!documentCaptured} />
+      <SubmitButton />
     </form>
   );
 }
@@ -121,7 +75,6 @@ function SelectField({
   error,
   label,
   name,
-  onChange,
   options,
   placeholder,
   value,
@@ -129,7 +82,6 @@ function SelectField({
   error?: string;
   label: string;
   name: string;
-  onChange?: (value: string) => void;
   options: ReadonlyArray<{ value: string; label: string }>;
   placeholder: string;
   value: string;
@@ -147,8 +99,7 @@ function SelectField({
         className="h-11 rounded-md border border-neutral-700 bg-neutral-950 px-3 text-base text-neutral-50 outline-none transition focus:border-cyan-300"
         id={name}
         name={name}
-        onChange={(event) => onChange?.(event.target.value)}
-        value={value}
+        defaultValue={value}
       >
         <option value="">{placeholder}</option>
         {options.map((option) => (
@@ -189,16 +140,16 @@ function InlineError({ id, message }: { id?: string; message?: string }) {
   );
 }
 
-function SubmitButton({ disabled }: { disabled: boolean }) {
+function SubmitButton() {
   const status = useFormStatus();
 
   return (
     <button
       className="h-11 rounded-md bg-cyan-300 px-4 text-sm font-semibold text-neutral-950 transition hover:bg-cyan-200 disabled:cursor-not-allowed disabled:bg-neutral-700 disabled:text-neutral-300"
-      disabled={disabled || status.pending}
+      disabled={status.pending}
       type="submit"
     >
-      {status.pending ? "Saving verification..." : "Continue to facial verification"}
+      {status.pending ? "Saving details..." : "Next: scan document"}
     </button>
   );
 }

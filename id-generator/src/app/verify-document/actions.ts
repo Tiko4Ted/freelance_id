@@ -4,7 +4,10 @@ import { prisma } from "@/lib/db";
 import { redirect } from "next/navigation";
 
 import type { DocumentVerificationFormState } from "@/app/verify-document/form-state";
-import { validateDocumentVerificationForm } from "@/lib/validation/document-verification";
+import {
+  validateDocumentDetails,
+  validateDocumentVerificationForm,
+} from "@/lib/validation/document-verification";
 
 export async function submitDocumentVerification(
   _previousState: DocumentVerificationFormState,
@@ -59,6 +62,60 @@ export async function submitDocumentVerification(
   });
 
   redirect(`/scan?applicationId=${application.id}`);
+}
+
+export async function saveDocumentDetails(
+  _previousState: DocumentVerificationFormState,
+  formData: FormData,
+): Promise<DocumentVerificationFormState> {
+  const applicationId = readString(formData, "applicationId");
+  const rawForm = {
+    countryOfResidence: readString(formData, "countryOfResidence"),
+    documentType: readString(formData, "documentType"),
+    documentIssuingCountry: readString(formData, "documentIssuingCountry"),
+  } as const;
+  const values = {
+    countryOfResidence: rawForm.countryOfResidence,
+    documentType: rawForm.documentType,
+    documentIssuingCountry: rawForm.documentIssuingCountry,
+    documentScanConfirmed: false,
+    documentConsent: false,
+  };
+  const validation = validateDocumentDetails(rawForm);
+
+  if (!applicationId) {
+    return { errors: { form: ["This application could not be identified."] }, values };
+  }
+
+  if (!validation.success) {
+    return { errors: validation.errors, values };
+  }
+
+  const application = await prisma.freelanceIdApplication.findUnique({
+    where: { id: applicationId },
+    select: { id: true, status: true },
+  });
+
+  if (!application) {
+    return {
+      errors: { form: ["Application not found. Start again from the application form."] },
+      values,
+    };
+  }
+
+  if (application.status !== "PENDING") {
+    return {
+      errors: { form: ["This application is no longer awaiting verification."] },
+      values,
+    };
+  }
+
+  await prisma.freelanceIdApplication.update({
+    where: { id: application.id },
+    data: validation.data,
+  });
+
+  redirect(`/verify-document/scan?applicationId=${application.id}`);
 }
 
 function readString(formData: FormData, field: string): string {

@@ -13,7 +13,7 @@ const documentTypeValues = documentTypes.map(
   (documentType) => documentType.value,
 ) as [string, ...string[]];
 
-const rawDocumentVerificationSchema = z.object({
+const documentDetailsSchema = z.object({
   countryOfResidence: z.enum(countryValues, {
     error: "Select your country of residence.",
   }),
@@ -23,6 +23,9 @@ const rawDocumentVerificationSchema = z.object({
   documentIssuingCountry: z.enum(countryValues, {
     error: "Select the document issuing country.",
   }),
+});
+
+const rawDocumentVerificationSchema = documentDetailsSchema.extend({
   documentScanConfirmed: z.literal("on", {
     error: "Complete the document alignment step before continuing.",
   }),
@@ -38,6 +41,11 @@ export type DocumentVerificationFieldName =
   | "documentScanConfirmed"
   | "documentConsent";
 
+export type DocumentDetailsFieldName =
+  | "countryOfResidence"
+  | "documentType"
+  | "documentIssuingCountry";
+
 export type DocumentVerificationErrors = Partial<
   Record<DocumentVerificationFieldName | "form", string[]>
 >;
@@ -49,6 +57,20 @@ export type DocumentVerificationValues = {
   documentScanConfirmed: boolean;
   documentConsent: boolean;
 };
+
+export function validateDocumentDetails(
+  rawForm: Record<DocumentDetailsFieldName, string>,
+):
+  | { success: true; data: Pick<DocumentVerificationValues, DocumentDetailsFieldName> }
+  | { success: false; errors: DocumentVerificationErrors } {
+  const parsed = documentDetailsSchema.safeParse(rawForm);
+
+  if (!parsed.success) {
+    return { success: false, errors: parsed.error.flatten().fieldErrors };
+  }
+
+  return { success: true, data: parsed.data };
+}
 
 export function validateDocumentVerificationForm(
   rawForm: Record<DocumentVerificationFieldName, string>,

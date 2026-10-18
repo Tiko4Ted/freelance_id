@@ -1,8 +1,44 @@
 import { describe, expect, it } from "vitest";
 
-import { validateDocumentVerificationForm } from "@/lib/validation/document-verification";
+import {
+  validateDocumentDetails,
+  validateDocumentVerificationForm,
+} from "@/lib/validation/document-verification";
 
 describe("document verification form validation", () => {
+  it("accepts document details before the scan step", () => {
+    const result = validateDocumentDetails({
+      countryOfResidence: "KE",
+      documentType: "passport",
+      documentIssuingCountry: "KE",
+    });
+
+    expect(result).toEqual({
+      success: true,
+      data: {
+        countryOfResidence: "KE",
+        documentType: "passport",
+        documentIssuingCountry: "KE",
+      },
+    });
+  });
+
+  it("blocks the scan step until all document details are selected", () => {
+    const result = validateDocumentDetails({
+      countryOfResidence: "KE",
+      documentType: "",
+      documentIssuingCountry: "",
+    });
+
+    expect(result.success).toBe(false);
+    if (result.success) {
+      return;
+    }
+
+    expect(result.errors.documentType).toBeDefined();
+    expect(result.errors.documentIssuingCountry).toBeDefined();
+  });
+
   it("accepts a complete document verification submission", () => {
     const result = validateDocumentVerificationForm({
       countryOfResidence: "KE",
