@@ -1,9 +1,13 @@
 import type { Metadata } from "next";
-import { redirect } from "next/navigation";
 
 import { DocumentVerificationForm } from "@/components/DocumentVerificationForm";
+import {
+  MissingApplicationCheckpoint,
+  VerificationCheckpoint,
+} from "@/components/VerificationCheckpoint";
 import { ApplicationStatus, ScanResult } from "@/generated/prisma/client";
 import { prisma } from "@/lib/db";
+import { getVerificationFlowState } from "@/lib/identity/verification-flow";
 
 export const metadata: Metadata = {
   title: "Document verification | Freelance ID",
@@ -17,7 +21,7 @@ export default async function DocumentVerificationPage({
   const applicationId = searchParams.applicationId;
 
   if (!applicationId) {
-    return <MissingApplication />;
+    return <MissingApplicationCheckpoint />;
   }
 
   const application = await prisma.freelanceIdApplication.findUnique({
@@ -34,21 +38,56 @@ export default async function DocumentVerificationPage({
   });
 
   if (!application) {
-    return <MissingApplication />;
+    return <MissingApplicationCheckpoint />;
   }
 
-  if (
-    application.status === ApplicationStatus.PROCESSING ||
-    application.status === ApplicationStatus.APPROVED ||
-    application.status === ApplicationStatus.REJECTED
-  ) {
-    redirect(`/status?applicationId=${applicationId}`);
+  const flowState = getVerificationFlowState({
+    status: application.status,
+    documentVerifiedAt: application.documentVerifiedAt,
+    hasPassingScan: application.scanAttempts.some(
+      (attempt) => attempt.detectionResult === ScanResult.PASS,
+    ),
+  });
+
+  if (flowState === "status") {
+    return (
+      <VerificationCheckpoint
+        actionHref={`/status?applicationId=${applicationId}`}
+        actionLabel="View application status"
+        description={statusDescription(application.status)}
+        eyebrow="Application status"
+        title="This verification step is already complete."
+      />
+    );
   }
 
-  if (
-    application.scanAttempts.some((attempt) => attempt.detectionResult === ScanResult.PASS)
-  ) {
-    redirect(`/payment?applicationId=${applicationId}`);
+  if (flowState === "payment") {
+    return (
+      <VerificationCheckpoint
+        actionHref={`/payment?applicationId=${applicationId}`}
+        actionLabel="Continue to payment"
+        description="Your document and facial verification are complete. Continue to the payment step whenever you are ready."
+        eyebrow="Verification complete"
+        title="Your application is ready for payment."
+      />
+    );
+  }
+
+  if (flowState === "facial") {
+    return (
+      <VerificationCheckpoint
+        actionHref={`/scan?applicationId=${applicationId}`}
+        actionLabel="Continue to facial verification"
+        description="Your document details are saved. Continue to the facial verification step when you are ready."
+        details={[
+          { label: "Residence", value: application.countryOfResidence ?? "Not provided" },
+          { label: "Document", value: formatDocumentType(application.documentType) },
+          { label: "Issuing country", value: application.documentIssuingCountry ?? "Not provided" },
+        ]}
+        eyebrow="Document verified"
+        title="Your document checkpoint is complete."
+      />
+    );
   }
 
   const initialValues = {
@@ -102,6 +141,29 @@ export default async function DocumentVerificationPage({
   );
 }
 
+function statusDescription(status: ApplicationStatus): string {
+  if (status === ApplicationStatus.PROCESSING) {
+    return "Payment has been received and your application is being processed.";
+  }
+
+  if (status === ApplicationStatus.APPROVED) {
+    return "Your application has already been approved. Open the status page to view the latest result.";
+  }
+
+  return "This application has already reached a final decision. Open the status page to view the latest result.";
+}
+
+function formatDocumentType(value: string | null): string {
+  if (!value) {
+    return "Not provided";
+  }
+
+  return value
+    .split("_")
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(" ");
+}
+
 function StepRail({ activeStep }: { activeStep: number }) {
   const steps = ["Profile", "Document", "Face"];
 
@@ -135,15 +197,5 @@ function TrustNote({ title, text }: { title: string; text: string }) {
       <p className="font-semibold text-white">{title}</p>
       <p className="mt-1 text-xs leading-5 text-neutral-400">{text}</p>
     </div>
-  );
-}
-
-function MissingApplication() {
-  return (
-    <main className="flex min-h-[100dvh] items-center justify-center bg-[#050505] p-6 text-neutral-50">
-      <div className="w-full max-w-md rounded-2xl border border-red-500/40 bg-red-950/30 p-5 text-center text-sm text-red-100">
-        This verification session is missing an application. Return to the application form and start again.
-      </div>
-    </main>
   );
 }

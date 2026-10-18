@@ -1,7 +1,12 @@
 import { ScanCamera } from "@/components/ScanCamera";
+import {
+  MissingApplicationCheckpoint,
+  VerificationCheckpoint,
+} from "@/components/VerificationCheckpoint";
 import { prisma } from "@/lib/db";
-import { ApplicationStatus, ScanResult } from "@/generated/prisma/client";
+import { getVerificationFlowState } from "@/lib/identity/verification-flow";
 import { redirect } from "next/navigation";
+import { ApplicationStatus, ScanResult } from "@/generated/prisma/client";
 
 export default async function ScanPage({
   searchParams,
@@ -20,27 +25,47 @@ export default async function ScanPage({
       },
     });
 
-    if (application) {
-      if (!application.documentVerifiedAt) {
-        redirect(`/verify-document?applicationId=${applicationId}`);
-      }
-
-      if (
-        application.status === ApplicationStatus.PROCESSING ||
-        application.status === ApplicationStatus.APPROVED ||
-        application.status === ApplicationStatus.REJECTED
-      ) {
-        redirect(`/status?applicationId=${applicationId}`);
-      }
-
-      const hasPassingScan = application.scanAttempts.some(
-        (attempt) => attempt.detectionResult === ScanResult.PASS
-      );
-
-      if (hasPassingScan && application.status === ApplicationStatus.PENDING) {
-        redirect(`/payment?applicationId=${applicationId}`);
-      }
+    if (!application) {
+      return <MissingApplicationCheckpoint />;
     }
+
+    const flowState = getVerificationFlowState({
+      status: application.status,
+      documentVerifiedAt: application.documentVerifiedAt,
+      hasPassingScan: application.scanAttempts.some(
+        (attempt) => attempt.detectionResult === ScanResult.PASS,
+      ),
+    });
+
+    if (flowState === "document") {
+      redirect(`/verify-document?applicationId=${applicationId}`);
+    }
+
+    if (flowState === "payment") {
+      return (
+        <VerificationCheckpoint
+          actionHref={`/payment?applicationId=${applicationId}`}
+          actionLabel="Continue to payment"
+          description="Your facial verification is complete. Continue to the payment step whenever you are ready."
+          eyebrow="Facial verification complete"
+          title="Your verification is ready for payment."
+        />
+      );
+    }
+
+    if (flowState === "status") {
+      return (
+        <VerificationCheckpoint
+          actionHref={`/status?applicationId=${applicationId}`}
+          actionLabel="View application status"
+          description={statusDescription(application.status)}
+          eyebrow="Application status"
+          title="This verification step is already complete."
+        />
+      );
+    }
+  } else {
+    return <MissingApplicationCheckpoint />;
   }
 
   return (
@@ -93,4 +118,16 @@ export default async function ScanPage({
       </div>
     </main>
   );
+}
+
+function statusDescription(status: ApplicationStatus): string {
+  if (status === ApplicationStatus.PROCESSING) {
+    return "Payment has been received and your application is being processed.";
+  }
+
+  if (status === ApplicationStatus.APPROVED) {
+    return "Your application has already been approved. Open the status page to view the latest result.";
+  }
+
+  return "This application has already reached a final decision. Open the status page to view the latest result.";
 }

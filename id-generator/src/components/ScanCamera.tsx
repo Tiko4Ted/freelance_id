@@ -72,11 +72,18 @@ export function ScanCamera({ applicationId }: { applicationId: string }) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       }).then(async (response) => {
+        const result = (await response.json()) as
+          | ScanDecisionOutcome
+          | { error?: string };
         if (!response.ok) {
-          throw new Error("Scan submission failed.");
+          throw new Error(
+            "error" in result && result.error
+              ? result.error
+              : "Scan submission failed.",
+          );
         }
 
-        return (await response.json()) as ScanDecisionOutcome;
+        return result as ScanDecisionOutcome;
       });
 
       const [result] = await Promise.all([
@@ -89,7 +96,7 @@ export function ScanCamera({ applicationId }: { applicationId: string }) {
 
       if (result.status !== "retry") {
         setTimeout(() => {
-          window.location.href = `/payment?applicationId=${applicationId}`;
+          window.location.replace(`/payment?applicationId=${applicationId}`);
         }, 2500);
       }
     } catch {
